@@ -28,7 +28,9 @@ public class ChatClient {
             boolean loggedIn = false;
 
             while (!loggedIn) {
-                writer.println(scanner.nextLine());
+                String input = scanner.nextLine();
+                writer.println(input);
+
                 String serverResponse = null;
                 try {
                     serverResponse = reader.readLine();
@@ -46,10 +48,10 @@ public class ChatClient {
             incomingMessagesHandler.start();
             while (true) {
                 String message = scanner.nextLine(); // read a line from the console
+                writer.println(message); // send the message to the server
                 if (message.equals("quit")) {
                     break;
                 }
-                writer.println("send " + message); // send the message to the server
             }
         } catch (IOException e) {
             System.out.println("There is a problem with the network communication");

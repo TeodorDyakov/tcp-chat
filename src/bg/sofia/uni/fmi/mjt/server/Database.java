@@ -1,56 +1,65 @@
 package bg.sofia.uni.fmi.mjt.server;
 
+import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.Reader;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Scanner;
 
 public class Database {
 
-    private final Map<String, String>userToPassword = new HashMap<>();
+    private final Map<String, String> userToPassword = new HashMap<>();
 
-    Database(){
+    Database() {
         try {
-            File database = new File("database.txt");
+            String FILE_NAME = "database.txt";
+            File database = new File(FILE_NAME);
             database.createNewFile();
-            readDatabaseToMemory();
         } catch (IOException e) {
             System.out.println("An error occurred.");
         }
     }
 
-    public String getPassOfUser(String user){
+    public static void main(String[] args) {
+        Database db = new Database();
+        db.savePassAndName("tedy", "123");
+        System.out.println(db.getPassOfUser("tedy"));
+        System.out.println(db.containsUser("tedy"));
+    }
+
+    public String getPassOfUser(String user) {
         return userToPassword.get(user);
     }
 
-    public boolean containsUser(String user){
+    public boolean containsUser(String user) {
         return userToPassword.containsKey(user);
     }
 
-    private void readDatabaseToMemory(){
+    public void readDatabaseToMemory(Reader reader) {
         try {
-            Scanner scanner = new Scanner(new File("database.txt"));
-            while(scanner.hasNextLine()){
-                String line = scanner.nextLine();
-                String[] tokens = line.split("\\s+");
-                if(tokens.length == 2) {
+            BufferedReader bufferedReader = new BufferedReader(reader);
+            String line = bufferedReader.readLine();
+            while (line != null) {
+                String[] tokens = line.split(":");
+                if (tokens.length == 2) {
                     userToPassword.put(tokens[0], tokens[1]);
                 }
+                line = bufferedReader.readLine();
             }
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
+        } catch (IOException exception) {
+            exception.printStackTrace();
         }
     }
 
-    public void savePassAndName(String username, String pass){
+    public void savePassAndName(String username, String pass) {
         userToPassword.put(username, pass);
         FileWriter myWriter = null;
         try {
-            myWriter = new FileWriter("database.txt");
+            myWriter = new FileWriter("database.txt", true);
             myWriter.write(username + ":" + pass);
+            myWriter.write(System.lineSeparator());
         } catch (IOException exception) {
             exception.printStackTrace();
         }
@@ -61,11 +70,5 @@ public class Database {
         } catch (IOException exception) {
             exception.printStackTrace();
         }
-    }
-
-    public static void main(String[] args) {
-        Database db = new Database();
-        db.savePassAndName("tedy", "123");
-        System.out.println(db.getPassOfUser("tedy"));
     }
 }
