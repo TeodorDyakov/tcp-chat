@@ -1,6 +1,8 @@
 package bg.sofia.uni.fmi.mjt.server;
 
+import java.io.File;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
@@ -15,16 +17,23 @@ public class ChatServer {
     public final int PORT = 54545;
     ServerSocket serverSocket;
     Map<String, PrintWriter> usernameToWriters = new ConcurrentHashMap<>();
-    Database database = new Database();
+    Database database;
 
     public static void main(String[] args) {
         ChatServer server = new ChatServer();
         server.start();
     }
 
+    public void setUpDatabase() throws IOException {
+        File dbFile = new File("database.txt");
+        dbFile.createNewFile();
+        database = new Database(new FileReader("database.txt"), new FileWriter("database.txt", true));
+        database.readDatabaseToMemory();
+    }
+
     public void start() {
         try {
-            database.readDatabaseToMemory(new FileReader("database.txt"));
+            setUpDatabase();
             int maxExecutorThreads = 128;
             ExecutorService executor = Executors.newFixedThreadPool(maxExecutorThreads);
             serverSocket = new ServerSocket(PORT);

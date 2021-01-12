@@ -11,7 +11,7 @@ public class UrlShortenerService {
     private static final String API_KEY = "e3e030e464a2e5b701738aab87c3b48cdc772";
 
     public static String shortenURL(String longURL) throws IOException {
-        URL url = new URL("https://cutt.ly/api/api.php?key=" + API_KEY + "&short=" + longURL +"&name=myUrl");
+        URL url = new URL("https://cutt.ly/api/api.php?key=" + API_KEY + "&short=" + longURL + "&name=myUrl");
         System.out.println(url);
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setRequestMethod("GET");

@@ -14,8 +14,8 @@ public class ClientRequestHandler implements Runnable {
 
     private final Socket socket;
     private final Map<String, PrintWriter> clientWriters;
-    private String loggedInUsername;
     private final Database database;
+    private String loggedInUsername;
 
     ClientRequestHandler(Socket socket, Map<String, PrintWriter> clientWriters, Database database) {
         this.socket = socket;
@@ -29,7 +29,7 @@ public class ClientRequestHandler implements Runnable {
         }
     }
 
-    boolean isLoggedIn(){
+    boolean isLoggedIn() {
         return loggedInUsername != null;
     }
 
@@ -45,16 +45,16 @@ public class ClientRequestHandler implements Runnable {
     void handleMessage(String request) {
         request = request.substring("send".length() + 1);
         String[] tokens = request.split(" ");
-        if(tokens.length >= 2){
-            if(tokens[0].equals("to")){
+        if (tokens.length >= 2) {
+            if (tokens[0].equals("to")) {
                 String toUsername = tokens[1];
                 String message = request.substring(3 + toUsername.length());
                 PrintWriter writer = clientWriters.get(toUsername);
-                if(writer != null){
+                if (writer != null) {
                     message = formatMessage(message).trim();
                     writer.println("(private message)" + message);
                     clientWriters.get(loggedInUsername).println("(private message to " + toUsername + ")" + message);
-                }else{
+                } else {
                     clientWriters.get(loggedInUsername).println("[ No such user ]");
                 }
                 return;
@@ -78,16 +78,16 @@ public class ClientRequestHandler implements Runnable {
         return false;
     }
 
-    public void handleRequest(String inputLine, Writer writer){
+    public void handleRequest(String inputLine, Writer writer) {
         var out = new PrintWriter(writer, true);
         String[] tokens = inputLine.split(" ");
 
         if (tokens.length == 0) {
             out.println(ServerResponse.INVALID_COMMAND);
         } else if (inputLine.startsWith("send")) {
-            if(!isLoggedIn()){
+            if (!isLoggedIn()) {
                 out.println(ServerResponse.NOT_LOGGED_IN);
-            }else{
+            } else {
                 handleMessage(inputLine);
             }
         } else if (tokens[0].equals("register") && tokens.length == 3) {
@@ -108,7 +108,7 @@ public class ClientRequestHandler implements Runnable {
             }
         } else if (tokens[0].equals("quit") && tokens.length == 1) {
             out.println(ServerResponse.DISCONNECTED);
-            if(loggedInUsername != null) {
+            if (loggedInUsername != null) {
                 clientWriters.remove(loggedInUsername);
             }
         } else {

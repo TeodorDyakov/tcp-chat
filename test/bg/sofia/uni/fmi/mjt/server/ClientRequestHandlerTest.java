@@ -2,24 +2,19 @@ package bg.sofia.uni.fmi.mjt.server;
 
 import org.junit.Test;
 
-import javax.xml.crypto.Data;
-
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.PrintWriter;
 import java.io.StringReader;
 import java.io.StringWriter;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 public class ClientRequestHandlerTest {
 
     @Test
-    public void handleRequestRegisterTest() throws FileNotFoundException {
-        Database database = new Database();
-        database.readDatabaseToMemory(new StringReader(""));
+    public void handleRequestRegisterTest() {
+        Database database = new Database(new StringReader(""), new StringWriter());
+        database.readDatabaseToMemory();
+
         ClientRequestHandler clientRequestHandler = new ClientRequestHandler(null, new ConcurrentHashMap<>(),
             database);
         StringWriter writer = new StringWriter();
@@ -29,9 +24,9 @@ public class ClientRequestHandlerTest {
     }
 
     @Test
-    public void handleRequestLoginTest() throws FileNotFoundException {
-        Database database = new Database();
-        database.readDatabaseToMemory(new StringReader("tedy:123"));
+    public void handleRequestLoginTest() {
+        Database database = new Database(new StringReader("tedy:123"), null);
+        database.readDatabaseToMemory();
         ClientRequestHandler clientRequestHandler = new ClientRequestHandler(null, new ConcurrentHashMap<>(),
             database);
         StringWriter writer = new StringWriter();
