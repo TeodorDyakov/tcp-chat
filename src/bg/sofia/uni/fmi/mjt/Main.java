@@ -1,4 +1,4 @@
-package com.company;
+package bg.sofia.uni.fmi.mjt;
 
 public class Main {
 

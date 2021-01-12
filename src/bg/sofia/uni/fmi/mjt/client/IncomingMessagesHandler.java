@@ -1,4 +1,4 @@
-package com.company.client;
+package bg.sofia.uni.fmi.mjt.client;
 
 import java.io.BufferedReader;
 import java.io.IOException;

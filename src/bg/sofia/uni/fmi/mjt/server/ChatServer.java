@@ -1,4 +1,4 @@
-package com.company.server;
+package bg.sofia.uni.fmi.mjt.server;
 
 import java.io.IOException;
 import java.io.PrintWriter;

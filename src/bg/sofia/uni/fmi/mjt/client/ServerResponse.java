@@ -1,4 +1,4 @@
-package com.company.client;
+package bg.sofia.uni.fmi.mjt.client;
 
 public class ServerResponse {
     public static String REGISTERED = "[ registered successfully ]";
