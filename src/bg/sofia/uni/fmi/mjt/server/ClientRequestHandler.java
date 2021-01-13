@@ -12,15 +12,14 @@ import java.util.Map;
 
 public class ClientRequestHandler implements Runnable {
 
-    private final Socket socket;
-    private final Map<String, PrintWriter> clientWriters;
-    private final Database database;
-    private String loggedInUser;
-
     static final String MESSAGE_TO = "msg-to";
     static final String REGISTER = "register";
     static final String LOGIN = "login";
     static final String MESSAGE = "msg";
+    private final Socket socket;
+    private final Map<String, PrintWriter> clientWriters;
+    private final Database database;
+    private String loggedInUser;
 
     ClientRequestHandler(Socket socket, Map<String, PrintWriter> clientWriters, Database database) {
         this.socket = socket;
@@ -62,7 +61,7 @@ public class ClientRequestHandler implements Runnable {
             message = formatMessage(message);
             out.println("(private message to " + toUsername + ")" + message);
             writer.println("(private message)" + message);
-        }else {
+        } else {
             out.println("[ username not found ]");
         }
     }
@@ -72,7 +71,7 @@ public class ClientRequestHandler implements Runnable {
         broadcastMessage(message);
     }
 
-    synchronized void broadcastMessage(String msg){
+    synchronized void broadcastMessage(String msg) {
         for (PrintWriter pw : clientWriters.values()) {
             pw.println(msg);
         }
@@ -112,7 +111,7 @@ public class ClientRequestHandler implements Runnable {
             String inputLine;
             while ((inputLine = reader.readLine()) != null) { // read the message from the client
                 System.out.println("Request received:" + inputLine);
-                    handleRequest(inputLine, writer);
+                handleRequest(inputLine, writer);
             }
         } catch (IOException exception) {
             System.out.println(exception.getMessage());
