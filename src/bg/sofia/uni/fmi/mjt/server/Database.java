@@ -52,5 +52,10 @@ public class Database {
         } catch (IOException exception) {
             exception.printStackTrace();
         }
+        try {
+            bufferedWriter.flush();
+        } catch (IOException exception) {
+            exception.printStackTrace();
+        }
     }
 }

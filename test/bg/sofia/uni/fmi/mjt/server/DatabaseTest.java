@@ -28,7 +28,6 @@ public class DatabaseTest {
 
     @Test
     public void savePassAndName() {
-
         StringWriter writer = new StringWriter();
         Database database = new Database(null, writer);
 
