@@ -15,7 +15,12 @@ public class ClientRequestHandler implements Runnable {
     private final Socket socket;
     private final Map<String, PrintWriter> clientWriters;
     private final Database database;
-    private String loggedInUsername;
+    private String loggedInUser;
+
+    static final String MESSAGE_TO = "msg-to";
+    static final String REGISTER = "register";
+    static final String LOGIN = "login";
+    static final String MESSAGE = "msg";
 
     ClientRequestHandler(Socket socket, Map<String, PrintWriter> clientWriters, Database database) {
         this.socket = socket;
@@ -23,107 +28,91 @@ public class ClientRequestHandler implements Runnable {
         this.database = database;
     }
 
-    synchronized void broadcastMessage(String message) {
-        for (PrintWriter printWriter : clientWriters.values()) {
-            printWriter.println(message);
+    public void execute(Command cmd, PrintWriter out) {
+        switch (cmd.command()) {
+            case MESSAGE -> message(cmd.arguments());
+            case LOGIN -> login(cmd.arguments(), out);
+            case REGISTER -> register(cmd.arguments(), out);
+            case MESSAGE_TO -> messageTo(cmd.arguments(), out);
         }
     }
 
-    boolean isLoggedIn() {
-        return loggedInUsername != null;
-    }
-
-    synchronized boolean register(String username, String password) {
+    synchronized void register(String[] arguments, PrintWriter out) {
+        String username = arguments[0];
+        String password = arguments[1];
         if (database.containsUser(username)) {
-            return false;
+            out.println(ServerResponse.USERNAME_TAKEN);
+            return;
         }
+        loggedInUser = username;
         database.savePassAndName(username, password);
-        loggedInUsername = username;
-        return true;
+
+        out.println(ServerResponse.REGISTERED);
+
+        clientWriters.put(loggedInUser, out);
+        broadcastMessage(loggedInUser + " has joined the chat");
     }
 
-    void handleMessage(String request) {
-        request = request.substring("send".length() + 1);
-        String[] tokens = request.split(" ");
-        if (tokens.length >= 2) {
-            if (tokens[0].equals("to")) {
-                String toUsername = tokens[1];
-                String message = request.substring(3 + toUsername.length());
-                PrintWriter writer = clientWriters.get(toUsername);
-                if (writer != null) {
-                    message = formatMessage(message).trim();
-                    writer.println("(private message)" + message);
-                    clientWriters.get(loggedInUsername).println("(private message to " + toUsername + ")" + message);
-                } else {
-                    clientWriters.get(loggedInUsername).println("[ No such user ]");
-                }
-                return;
-            }
+    synchronized void messageTo(String[] arguments, PrintWriter out) {
+        String toUsername = arguments[0];
+        String message = arguments[1];
+        PrintWriter writer = clientWriters.get(toUsername);
+
+        if (writer != null) {
+            message = formatMessage(message);
+            out.println("(private message to " + toUsername + ")" + message);
+            writer.println("(private message)" + message);
+        }else {
+            out.println("[ username not found ]");
         }
-        String message = formatMessage(request);
+    }
+
+    private synchronized void message(String[] arguments) {
+        String message = formatMessage(arguments[0]);
         broadcastMessage(message);
+    }
+
+    synchronized void broadcastMessage(String msg){
+        for (PrintWriter pw : clientWriters.values()) {
+            pw.println(msg);
+        }
+    }
+
+    private void login(String[] arguments, PrintWriter out) {
+        String username = arguments[0];
+        String password = arguments[1];
+        if (database.containsUser(username) && database.getPassOfUser(username).equals(password)) {
+            loggedInUser = username;
+            clientWriters.put(loggedInUser, out);
+            out.println(ServerResponse.LOGGED_IN);
+            broadcastMessage(loggedInUser + " has joined the chat");
+            return;
+        }
+        out.println(ServerResponse.INVALID_USERNAME_OR_PASS);
     }
 
     public String formatMessage(String message) {
         return "%s %s:%s"
-            .formatted(loggedInUsername, LocalDateTime.now().format(DateTimeFormatter.ofPattern("MM-dd HH:mm")),
+            .formatted(loggedInUser, LocalDateTime.now().format(DateTimeFormatter.ofPattern("MM-dd HH:mm")),
                 message);
     }
 
-    private boolean login(String user, String pass) {
-        if (database.containsUser(user) && database.getPassOfUser(user).equals(pass)) {
-            loggedInUsername = user;
-            return true;
-        }
-        return false;
-    }
-
     public void handleRequest(String inputLine, Writer writer) {
-        var out = new PrintWriter(writer, true);
-        String[] tokens = inputLine.split(" ");
-
-        if (tokens.length == 0) {
-            out.println(ServerResponse.INVALID_COMMAND);
-        } else if (inputLine.startsWith("send")) {
-            if (!isLoggedIn()) {
-                out.println(ServerResponse.NOT_LOGGED_IN);
-            } else {
-                handleMessage(inputLine);
-            }
-        } else if (tokens[0].equals("register") && tokens.length == 3) {
-            if (register(tokens[1], tokens[2])) {
-                out.println(ServerResponse.REGISTERED);
-                clientWriters.put(loggedInUsername, out);
-                broadcastMessage(loggedInUsername + " has joined the chat");
-            } else {
-                out.println(ServerResponse.USERNAME_TAKEN);
-            }
-        } else if (tokens[0].equals("login") && tokens.length == 3) {
-            if (login(tokens[1], tokens[2])) {
-                out.println(ServerResponse.LOGGED_IN);
-                clientWriters.put(loggedInUsername, out);
-                broadcastMessage(loggedInUsername + " has joined the chat");
-            } else {
-                out.println(ServerResponse.INVALID_USERNAME_OR_PASS);
-            }
-        } else if (tokens[0].equals("quit") && tokens.length == 1) {
-            out.println(ServerResponse.DISCONNECTED);
-            if (loggedInUsername != null) {
-                clientWriters.remove(loggedInUsername);
-            }
-        } else {
-            out.println(ServerResponse.INVALID_COMMAND);
-        }
+        Command command = CommandCreator.newCommand(inputLine);
+        execute(command, new PrintWriter(writer));
     }
 
     @Override
     public void run() {
-        try (var out = new PrintWriter(socket.getOutputStream(), true);
-             var in = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
+        try (var out = socket.getOutputStream();
+             var in = socket.getInputStream();
+             var reader = new BufferedReader(new InputStreamReader(in))) {
+            var writer = new PrintWriter(out, true);
+
             String inputLine;
-            while ((inputLine = in.readLine()) != null) { // read the message from the client
+            while ((inputLine = reader.readLine()) != null) { // read the message from the client
                 System.out.println("Request received:" + inputLine);
-                handleRequest(inputLine, out);
+                    handleRequest(inputLine, writer);
             }
         } catch (IOException exception) {
             System.out.println(exception.getMessage());

@@ -52,12 +52,5 @@ public class Database {
         } catch (IOException exception) {
             exception.printStackTrace();
         }
-        try {
-            if (bufferedWriter != null) {
-                bufferedWriter.close();
-            }
-        } catch (IOException exception) {
-            exception.printStackTrace();
-        }
     }
 }
