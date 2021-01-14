@@ -17,6 +17,7 @@ public class URLshortener {
     public static String shorten(String longUrl) {
         HttpClient client = HttpClient.newBuilder().build();
         URI url;
+
         try {
             url = new URI("https://cutt.ly/api/api.php?key=" + API_KEY + "&short=" + longUrl);
         } catch (URISyntaxException e) {

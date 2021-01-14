@@ -6,6 +6,8 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.Writer;
 import java.net.Socket;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
@@ -91,6 +93,20 @@ public class ClientRequestHandler implements Runnable {
     }
 
     public String formatMessage(String message) {
+        String[] tokens = message.split("\\s+");
+        String uriString = null;
+        for(String tok : tokens){
+            try {
+                URI uri = new URI(tok);
+                uriString = uri.toString();
+                break;
+            } catch (URISyntaxException e) {
+                e.printStackTrace();
+            }
+        }
+        if(uriString!= null){
+            message = message.replace(uriString, URLshortener.shorten(uriString));
+        }
         return "%s %s:%s"
             .formatted(loggedInUser, LocalDateTime.now().format(DateTimeFormatter.ofPattern("MM-dd HH:mm")),
                 message);
@@ -98,7 +114,7 @@ public class ClientRequestHandler implements Runnable {
 
     public void handleRequest(String inputLine, Writer writer) {
         Command command = CommandCreator.newCommand(inputLine);
-        execute(command, new PrintWriter(writer));
+        execute(command, new PrintWriter(writer, true));
     }
 
     @Override
