@@ -1,7 +1,10 @@
 package bg.sofia.uni.fmi.mjt.server;
 
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.Writer;
@@ -16,6 +19,7 @@ public class ClientRequestHandler implements Runnable {
     static final String REGISTER = "register";
     static final String LOGIN = "login";
     static final String MESSAGE = "msg";
+    static final String SEND_FILE = "send-file";
 
     private final Socket socket;
     private final Map<String, PrintWriter> clientWriters;
@@ -102,7 +106,7 @@ public class ClientRequestHandler implements Runnable {
 
     public String formatMessage(String message) {
         URLshortener urLshortener = new URLshortener();
-        message = urLshortener.shorteURLs(message);
+        message = urLshortener.shortenURLs(message);
         return "%s %s:%s"
             .formatted(loggedInUser, LocalDateTime.now().format(DateTimeFormatter.ofPattern("MM-dd HH:mm")),
                 message);
@@ -111,6 +115,28 @@ public class ClientRequestHandler implements Runnable {
     public void handleRequest(String inputLine, Writer writer) {
         Command command = CommandCreator.newCommand(inputLine);
         execute(command, new PrintWriter(writer, true));
+    }
+
+    public void receiveFile(InputStream in, String inputLine) throws IOException {
+        String[] tokens = inputLine.split("\\s+");
+
+        String fileName = tokens[1];
+        int fileSz = Integer.parseInt(tokens[2]);
+
+        byte[] bytes = new byte[16 * 1024];
+        int bytesRead = 0;
+        int count;
+
+        File receivedFile = new File("received_" + fileName);
+        receivedFile.createNewFile();
+        var out = new FileOutputStream(receivedFile.getName());
+
+        while (bytesRead < fileSz && (count = in.read(bytes)) > 0) {
+            out.write(bytes, 0, count);
+            bytesRead += count;
+        }
+        out.flush();
+        out.close();
     }
 
     @Override
@@ -123,7 +149,10 @@ public class ClientRequestHandler implements Runnable {
             String inputLine;
             while ((inputLine = reader.readLine()) != null) { // read the message from the client
                 System.out.println("Request received:" + inputLine);
-                handleRequest(inputLine, writer);
+                if(inputLine.startsWith("send-file")){
+                    receiveFile(in, inputLine);
+                }else
+                    handleRequest(inputLine, writer);
             }
         } catch (IOException exception) {
             System.out.println(exception.getMessage());

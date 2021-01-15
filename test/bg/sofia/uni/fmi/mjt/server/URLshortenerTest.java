@@ -17,9 +17,9 @@ public class URLshortenerTest {
         final String shortURL = "https://cutt.ly/xjREZsj";
 
         when(urLshortener.shorten(fmiURL)).thenReturn(shortURL);
-        when(urLshortener.shorteURLs(anyString())).thenCallRealMethod();
+        when(urLshortener.shortenURLs(anyString())).thenCallRealMethod();
 
         final String message = "hi this is the link to fmi " + fmiURL + " click it";
-        assertEquals(urLshortener.shorteURLs(message), "hi this is the link to fmi " + shortURL + " click it");
+        assertEquals(urLshortener.shortenURLs(message), "hi this is the link to fmi " + shortURL + " click it");
     }
 }

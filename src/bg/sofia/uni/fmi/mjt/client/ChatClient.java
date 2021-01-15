@@ -1,10 +1,17 @@
 package bg.sofia.uni.fmi.mjt.client;
 
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.nio.file.Files;
 import java.util.Scanner;
 
 public class ChatClient {
@@ -17,38 +24,48 @@ public class ChatClient {
         client.start();
     }
 
+    public void sendFile(String inputLine, OutputStream out) throws IOException {
+        PrintWriter pw = new PrintWriter(out, true);
+        String[] tokens = inputLine.split("\\s+");
+
+        File file = new File(tokens[1]);
+        long fileSz = file.length();
+        pw.println(inputLine + " " + fileSz);
+
+        byte[] bytes = new byte[16 * 1024];
+        InputStream in = new FileInputStream(file);
+
+        int count;
+        while ((count = in.read(bytes)) > 0) {
+            System.out.println(count);
+            out.write(bytes, 0, count);
+        }
+        in.close();
+        out.flush();
+    }
+
     public void start() {
         try (Socket socket = new Socket(HOST, PORT);
+             var in = socket.getInputStream();
              PrintWriter writer = new PrintWriter(socket.getOutputStream(), true);
-             BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()))
+             BufferedReader reader = new BufferedReader(new InputStreamReader(in))
         ) {
             Scanner scanner = new Scanner(System.in);
             System.out.println("To login enter: login <username> <password>" +
                 "\nTo register enter register <username> <password>");
-            boolean loggedIn = false;
 
-            while (!loggedIn) {
-                String input = scanner.nextLine();
-                writer.println(input);
-
-                String serverResponse = null;
-                try {
-                    serverResponse = reader.readLine();
-                    System.out.println(serverResponse);
-                } catch (IOException exception) {
-                    exception.printStackTrace();
-                }
-                assert serverResponse != null;
-                if (serverResponse.equals(ServerResponse.REGISTERED) ||
-                    serverResponse.equals(ServerResponse.LOGGED_IN)) {
-                    loggedIn = true;
-                }
-            }
-            IncomingMessagesHandler incomingMessagesHandler = new IncomingMessagesHandler(reader);
+            IncomingMessagesHandler incomingMessagesHandler = new IncomingMessagesHandler(reader, in);
             incomingMessagesHandler.start();
+
             while (true) {
                 String message = scanner.nextLine(); // read a line from the console
-                writer.println(message); // send the message to the server
+
+                if(message.startsWith("send-file")){
+                    sendFile(message, socket.getOutputStream());
+                }else{
+                    writer.println(message); // send the message to the server
+                }
+
                 if (message.equals("quit")) {
                     break;
                 }

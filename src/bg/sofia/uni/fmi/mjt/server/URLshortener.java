@@ -45,7 +45,7 @@ public class URLshortener {
         return longUrl;
     }
 
-    public String shorteURLs(String message) {
+    public String shortenURLs(String message) {
         String[] tokens = message.split("\\s+");
         List<String> urls = new ArrayList<>();
         for (String tok : tokens) {
@@ -65,7 +65,7 @@ public class URLshortener {
         URLshortener urLshortener = new URLshortener();
         String s = urLshortener.shorten("https://www.fmi.uni-sofia.bg/en");
         System.out.println(s);
-        String m = urLshortener.shorteURLs("https://wwww.google.com hello here is the link to fmi site https://www.fmi.uni-sofia.bg/en");
+        String m = urLshortener.shortenURLs("https://wwww.google.com hello here is the link to fmi site https://www.fmi.uni-sofia.bg/en");
         System.out.println(m);
     }
 }
