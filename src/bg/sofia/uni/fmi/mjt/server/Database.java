@@ -11,8 +11,8 @@ import java.util.Map;
 public class Database {
 
     private final Map<String, String> userToPassword = new HashMap<>();
-    private Reader reader;
-    private Writer writer;
+    private final Reader reader;
+    private final Writer writer;
 
     Database(Reader reader, Writer writer) {
         this.reader = reader;

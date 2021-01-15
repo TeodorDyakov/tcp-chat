@@ -6,8 +6,6 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.Writer;
 import java.net.Socket;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
@@ -18,6 +16,7 @@ public class ClientRequestHandler implements Runnable {
     static final String REGISTER = "register";
     static final String LOGIN = "login";
     static final String MESSAGE = "msg";
+
     private final Socket socket;
     private final Map<String, PrintWriter> clientWriters;
     private final Database database;
@@ -31,10 +30,11 @@ public class ClientRequestHandler implements Runnable {
 
     public void execute(Command cmd, PrintWriter out) {
         switch (cmd.command()) {
-            case MESSAGE -> message(cmd.arguments());
+            case MESSAGE -> message(cmd.arguments(), out);
             case LOGIN -> login(cmd.arguments(), out);
             case REGISTER -> register(cmd.arguments(), out);
             case MESSAGE_TO -> messageTo(cmd.arguments(), out);
+            default -> out.println(ServerResponse.INVALID_COMMAND);
         }
     }
 
@@ -55,26 +55,34 @@ public class ClientRequestHandler implements Runnable {
     }
 
     synchronized void messageTo(String[] arguments, PrintWriter out) {
+        if (loggedInUser == null) {
+            out.println(ServerResponse.NOT_LOGGED_IN);
+            return;
+        }
         String toUsername = arguments[0];
         String message = arguments[1];
-        PrintWriter writer = clientWriters.get(toUsername);
+        var writer = clientWriters.get(toUsername);
 
         if (writer != null) {
             message = formatMessage(message);
             out.println("(private message to " + toUsername + ")" + message);
             writer.println("(private message)" + message);
         } else {
-            out.println("[ username not found ]");
+            out.println("[ no user with this name online ]");
         }
     }
 
-    private synchronized void message(String[] arguments) {
+    synchronized void message(String[] arguments, PrintWriter out) {
+        if (loggedInUser == null) {
+            out.println(ServerResponse.NOT_LOGGED_IN);
+            return;
+        }
         String message = formatMessage(arguments[0]);
         broadcastMessage(message);
     }
 
     synchronized void broadcastMessage(String msg) {
-        for (PrintWriter pw : clientWriters.values()) {
+        for (var pw : clientWriters.values()) {
             pw.println(msg);
         }
     }
@@ -93,20 +101,8 @@ public class ClientRequestHandler implements Runnable {
     }
 
     public String formatMessage(String message) {
-        String[] tokens = message.split("\\s+");
-        String uriString = null;
-        for(String tok : tokens){
-            try {
-                URI uri = new URI(tok);
-                uriString = uri.toString();
-                break;
-            } catch (URISyntaxException e) {
-                e.printStackTrace();
-            }
-        }
-        if(uriString!= null){
-            message = message.replace(uriString, URLshortener.shorten(uriString));
-        }
+        URLshortener urLshortener = new URLshortener();
+        message = urLshortener.shorteURLs(message);
         return "%s %s:%s"
             .formatted(loggedInUser, LocalDateTime.now().format(DateTimeFormatter.ofPattern("MM-dd HH:mm")),
                 message);
