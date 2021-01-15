@@ -8,4 +8,5 @@ public final class ServerResponse {
     public static final String INVALID_COMMAND = "[ invalid command ]";
     public static final String REGISTERED = "[ registered successfully ]";
     public static final String INVALID_USERNAME_OR_PASS = "[ invalid username/password combination ]";
+    public static final String FILE_SENT_SUCCESSFULLY = "[ file sent successfully ]";
 }

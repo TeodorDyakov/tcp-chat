@@ -11,19 +11,24 @@ public class IncomingMessagesHandler extends Thread {
     BufferedReader reader;
     InputStream in;
 
+    IncomingMessagesHandler(BufferedReader reader, InputStream in) {
+        this.reader = reader;
+        this.in = in;
+    }
+
     public void receiveFile(InputStream in, String inputLine) throws IOException {
         String[] tokens = inputLine.split("\\s+");
 
-        String fileName = tokens[1];
-        int fileSz = Integer.parseInt(tokens[2]);
+        String fileName = tokens[2];
+        int fileSz = Integer.parseInt(tokens[3]);
 
         byte[] bytes = new byte[16 * 1024];
         int bytesRead = 0;
         int count;
 
-        File receivedFile = new File("received_" + fileName);
+        File receivedFile = new File("received_files/" + fileName);
         receivedFile.createNewFile();
-        var out = new FileOutputStream(receivedFile.getName());
+        var out = new FileOutputStream(receivedFile);
 
         while (bytesRead < fileSz && (count = in.read(bytes)) > 0) {
             out.write(bytes, 0, count);
@@ -31,11 +36,8 @@ public class IncomingMessagesHandler extends Thread {
         }
         out.flush();
         out.close();
-    }
-
-    IncomingMessagesHandler(BufferedReader reader, InputStream in) {
-        this.reader = reader;
-        this.in = in;
+        String response = reader.readLine();
+        System.out.println(response);
     }
 
     @Override
@@ -50,13 +52,13 @@ public class IncomingMessagesHandler extends Thread {
                 System.out.println(exception.getMessage());
                 break;
             }
-            if(inputLine.startsWith("send-file")){
+            if (inputLine.startsWith("send-file")) {
                 try {
                     receiveFile(in, inputLine);
                 } catch (IOException exception) {
                     exception.printStackTrace();
                 }
-            }else {
+            } else {
                 System.out.println(inputLine);
             }
         }

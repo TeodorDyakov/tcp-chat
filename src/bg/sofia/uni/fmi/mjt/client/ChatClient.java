@@ -3,15 +3,12 @@ package bg.sofia.uni.fmi.mjt.client;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.net.Socket;
-import java.nio.file.Files;
 import java.util.Scanner;
 
 public class ChatClient {
@@ -28,7 +25,7 @@ public class ChatClient {
         PrintWriter pw = new PrintWriter(out, true);
         String[] tokens = inputLine.split("\\s+");
 
-        File file = new File(tokens[1]);
+        File file = new File(tokens[2]);
         long fileSz = file.length();
         pw.println(inputLine + " " + fileSz);
 
@@ -37,7 +34,6 @@ public class ChatClient {
 
         int count;
         while ((count = in.read(bytes)) > 0) {
-            System.out.println(count);
             out.write(bytes, 0, count);
         }
         in.close();
@@ -45,6 +41,7 @@ public class ChatClient {
     }
 
     public void start() {
+        new File("received_files").mkdir();
         try (Socket socket = new Socket(HOST, PORT);
              var in = socket.getInputStream();
              PrintWriter writer = new PrintWriter(socket.getOutputStream(), true);
@@ -60,9 +57,9 @@ public class ChatClient {
             while (true) {
                 String message = scanner.nextLine(); // read a line from the console
 
-                if(message.startsWith("send-file")){
+                if (message.startsWith("send-file")) {
                     sendFile(message, socket.getOutputStream());
-                }else{
+                } else {
                     writer.println(message); // send the message to the server
                 }
 

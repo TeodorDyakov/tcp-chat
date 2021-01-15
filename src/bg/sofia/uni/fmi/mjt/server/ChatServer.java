@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -18,6 +19,7 @@ public class ChatServer {
     ServerSocket serverSocket;
     Map<String, PrintWriter> usernameToWriters = new ConcurrentHashMap<>();
     Database database;
+    Map<String, OutputStream> clientsOutputStreams = new ConcurrentHashMap<>();
 
     public static void main(String[] args) {
         ChatServer server = new ChatServer();
@@ -41,7 +43,7 @@ public class ChatServer {
             while (true) {
                 clientSocket = serverSocket.accept();
                 ClientRequestHandler clientHandler =
-                    new ClientRequestHandler(clientSocket, usernameToWriters, database);
+                    new ClientRequestHandler(clientSocket, usernameToWriters, database, clientsOutputStreams);
                 executor.execute(clientHandler);
             }
         } catch (IOException e) {

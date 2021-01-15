@@ -18,6 +18,15 @@ public class URLshortener {
 
     private static final String API_KEY = "e3e030e464a2e5b701738aab87c3b48cdc772";
 
+    public static void main(String[] args) {
+        URLshortener urLshortener = new URLshortener();
+        String s = urLshortener.shorten("https://www.fmi.uni-sofia.bg/en");
+        System.out.println(s);
+        String m = urLshortener
+            .shortenURLs("https://wwww.google.com hello here is the link to fmi site https://www.fmi.uni-sofia.bg/en");
+        System.out.println(m);
+    }
+
     public String shorten(String longUrl) {
         HttpClient client = HttpClient.newBuilder().build();
         URI url;
@@ -59,13 +68,5 @@ public class URLshortener {
             message = message.replace(uriString, shorten(uriString));
         }
         return message;
-    }
-
-    public static void main(String[] args) {
-        URLshortener urLshortener = new URLshortener();
-        String s = urLshortener.shorten("https://www.fmi.uni-sofia.bg/en");
-        System.out.println(s);
-        String m = urLshortener.shortenURLs("https://wwww.google.com hello here is the link to fmi site https://www.fmi.uni-sofia.bg/en");
-        System.out.println(m);
     }
 }
