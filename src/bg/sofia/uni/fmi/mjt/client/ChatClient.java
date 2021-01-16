@@ -53,7 +53,8 @@ public class ChatClient {
             System.out.println("To login enter: login <username> <password>" +
                 "\nTo register enter register <username> <password>");
 
-            IncomingMessagesHandler incomingMessagesHandler = new IncomingMessagesHandler(reader, fileTransferSocketInputStream);
+            IncomingMessagesHandler incomingMessagesHandler =
+                new IncomingMessagesHandler(reader, fileTransferSocketInputStream);
             incomingMessagesHandler.start();
 
             while (true) {

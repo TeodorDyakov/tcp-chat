@@ -27,7 +27,8 @@ public class ClientRequestHandler implements Runnable {
     private final Map<String, OutputStream> clientOutputStreams;
     private String loggedInUser;
 
-    ClientRequestHandler(Socket socket, Socket fileTransferSocket, Map<String, PrintWriter> clientWriters, Database database,
+    ClientRequestHandler(Socket socket, Socket fileTransferSocket, Map<String, PrintWriter> clientWriters,
+                         Database database,
                          Map<String, OutputStream> clientOutputStreams) {
         this.socket = socket;
         this.fileTransferSocket = fileTransferSocket;
@@ -36,37 +37,41 @@ public class ClientRequestHandler implements Runnable {
         this.clientOutputStreams = clientOutputStreams;
     }
 
-    public void execute(Command cmd, PrintWriter out, OutputStream outputStream) {
+    public void execute(Command cmd, PrintWriter writer, OutputStream outputStream) {
         switch (cmd.command()) {
-            case SEND_MESSAGE -> message(cmd.arguments(), out);
-            case LOGIN -> login(cmd.arguments(), out, outputStream);
-            case REGISTER -> register(cmd.arguments(), out, outputStream);
-            case SEND_MESSAGE_TO -> messageTo(cmd.arguments(), out);
-            default -> out.println(ServerResponse.INVALID_COMMAND);
+            case SEND_MESSAGE -> message(cmd.arguments(), writer);
+            case LOGIN -> login(cmd.arguments(), writer, outputStream);
+            case REGISTER -> register(cmd.arguments(), writer, outputStream);
+            case SEND_MESSAGE_TO -> messageTo(cmd.arguments(), writer);
+            default -> sendLineToClient(ServerResponse.INVALID_COMMAND, writer);
         }
     }
 
-    synchronized void register(String[] arguments, PrintWriter out, OutputStream outputStream) {
+    synchronized void register(String[] arguments, PrintWriter writer, OutputStream outputStream) {
         String username = arguments[0];
         String password = arguments[1];
         if (database.containsUser(username)) {
-            out.println(ServerResponse.USERNAME_TAKEN);
+            sendLineToClient(ServerResponse.USERNAME_TAKEN, writer);
             return;
         }
         loggedInUser = username;
         database.savePassAndName(username, password);
 
-        out.println(ServerResponse.REGISTERED);
+        sendLineToClient(ServerResponse.REGISTERED, writer);
 
-        clientWriters.put(loggedInUser, out);
+        clientWriters.put(loggedInUser, writer);
         clientOutputStreams.put(loggedInUser, outputStream);
 
         broadcastMessage(loggedInUser + " has joined the chat");
     }
 
-    synchronized void messageTo(String[] arguments, PrintWriter out) {
+    synchronized void sendLineToClient(String msg, PrintWriter to) {
+        to.println(msg);
+    }
+
+    void messageTo(String[] arguments, PrintWriter out) {
         if (loggedInUser == null) {
-            out.println(ServerResponse.NOT_LOGGED_IN);
+            sendLineToClient(ServerResponse.NOT_LOGGED_IN, out);
             return;
         }
         String toUsername = arguments[0];
@@ -75,25 +80,25 @@ public class ClientRequestHandler implements Runnable {
 
         if (writer != null) {
             message = formatMessage(message);
-            out.println("(private message to " + toUsername + ")" + message);
-            writer.println("(private message)" + message);
+            sendLineToClient("(private message to " + toUsername + ")" + message, out);
+            sendLineToClient("(private message)" + message, writer);
         } else {
-            out.println("[ no user with this name online ]");
+            sendLineToClient("[ no user with this name online ]", out);
         }
     }
 
-    synchronized void message(String[] arguments, PrintWriter out) {
+    void message(String[] arguments, PrintWriter out) {
         if (loggedInUser == null) {
-            out.println(ServerResponse.NOT_LOGGED_IN);
+            sendLineToClient(ServerResponse.NOT_LOGGED_IN, out);
             return;
         }
         String message = formatMessage(arguments[0]);
         broadcastMessage(message);
     }
 
-    synchronized void broadcastMessage(String msg) {
+    void broadcastMessage(String msg) {
         for (var pw : clientWriters.values()) {
-            pw.println(msg);
+            sendLineToClient(msg, pw);
         }
     }
 
@@ -104,11 +109,11 @@ public class ClientRequestHandler implements Runnable {
             loggedInUser = username;
             clientWriters.put(loggedInUser, out);
             clientOutputStreams.put(loggedInUser, outputStream);
-            out.println(ServerResponse.LOGGED_IN);
+            sendLineToClient(ServerResponse.LOGGED_IN, out);
             broadcastMessage(loggedInUser + " has joined the chat");
             return;
         }
-        out.println(ServerResponse.INVALID_USERNAME_OR_PASS);
+        sendLineToClient(ServerResponse.INVALID_USERNAME_OR_PASS, out);
     }
 
     public String formatMessage(String message) {
@@ -139,25 +144,24 @@ public class ClientRequestHandler implements Runnable {
         if (out == null) {
             return;
         }
-        printWriter.println(inputLine);
+        sendLineToClient(inputLine, printWriter);
 
         while (bytesRead < fileSz && (count = in.read(bytes)) > 0) {
             out.write(bytes, 0, count);
             bytesRead += count;
         }
         out.flush();
-        printWriter.printf("[ file received from %s ]\n", loggedInUser);
-        clientWriters.get(loggedInUser).println(ServerResponse.FILE_SENT_SUCCESSFULLY);
+        sendLineToClient("[ file received from " + loggedInUser + "]", printWriter);
+        sendLineToClient(ServerResponse.FILE_SENT_SUCCESSFULLY, clientWriters.get(loggedInUser));
     }
 
     @Override
     public void run() {
         try (var fileTransferOut = fileTransferSocket.getOutputStream();
              var fileTransferIn = fileTransferSocket.getInputStream();
-             var out = socket.getOutputStream();
-             var in = socket.getInputStream()) {
-            var reader = new BufferedReader(new InputStreamReader(in));
-            var writer = new PrintWriter(out, true);
+             var reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+             var writer = new PrintWriter(socket.getOutputStream(), true)) {
+
             String inputLine;
             while ((inputLine = reader.readLine()) != null) { // read the message from the client
                 System.out.println("Request received:" + inputLine);

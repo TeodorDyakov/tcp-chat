@@ -2,6 +2,7 @@ package bg.sofia.uni.fmi.mjt.server;
 
 import org.junit.Test;
 
+import java.io.OutputStream;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.concurrent.ConcurrentHashMap;
@@ -18,7 +19,7 @@ public class ClientRequestHandlerTest {
         ClientRequestHandler clientRequestHandler = new ClientRequestHandler(null, null, new ConcurrentHashMap<>(),
             database, new ConcurrentHashMap<>());
         StringWriter writer = new StringWriter();
-        clientRequestHandler.handleRequest("register kolio kote", writer, null);
+        clientRequestHandler.handleRequest("register kolio kote", writer, OutputStream.nullOutputStream());
         assertEquals(writer.toString(), ServerResponse.REGISTERED + System.lineSeparator() +
             "kolio has joined the chat" + System.lineSeparator());
     }
@@ -30,7 +31,7 @@ public class ClientRequestHandlerTest {
         ClientRequestHandler clientRequestHandler = new ClientRequestHandler(null, null, new ConcurrentHashMap<>(),
             database, new ConcurrentHashMap<>());
         StringWriter writer = new StringWriter();
-        clientRequestHandler.handleRequest("login tedy 123", writer, System.out);
+        clientRequestHandler.handleRequest("login tedy 123", writer, OutputStream.nullOutputStream());
         assertEquals(writer.toString(), ServerResponse.LOGGED_IN + System.lineSeparator() +
             "tedy has joined the chat" + System.lineSeparator());
     }
@@ -42,11 +43,11 @@ public class ClientRequestHandlerTest {
         ClientRequestHandler clientRequestHandler = new ClientRequestHandler(null, null, new ConcurrentHashMap<>(),
             database, new ConcurrentHashMap<>());
         StringWriter writer = new StringWriter();
-        clientRequestHandler.handleRequest("msg-to tedy hello", writer, System.out);
+        clientRequestHandler.handleRequest("send-msg-to tedy hello", writer, OutputStream.nullOutputStream());
         assertEquals(writer.toString(), ServerResponse.NOT_LOGGED_IN + System.lineSeparator());
-        clientRequestHandler.handleRequest("login ana banana", writer, System.out);
+        clientRequestHandler.handleRequest("login ana banana", writer, OutputStream.nullOutputStream());
         writer = new StringWriter();
-        clientRequestHandler.handleRequest("msg-to tedy hello", writer, System.out);
+        clientRequestHandler.handleRequest("send-msg-to tedy hello", writer, OutputStream.nullOutputStream());
         assertEquals(writer.toString(), "[ no user with this name online ]\n");
     }
 }
