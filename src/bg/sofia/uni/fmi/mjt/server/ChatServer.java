@@ -40,10 +40,13 @@ public class ChatServer {
             ExecutorService executor = Executors.newFixedThreadPool(maxExecutorThreads);
             serverSocket = new ServerSocket(PORT);
             Socket clientSocket;
+            Socket fileTransferSocket;
             while (true) {
                 clientSocket = serverSocket.accept();
+                fileTransferSocket = serverSocket.accept();
                 ClientRequestHandler clientHandler =
-                    new ClientRequestHandler(clientSocket, usernameToWriters, database, clientsOutputStreams);
+                    new ClientRequestHandler(clientSocket, fileTransferSocket, usernameToWriters, database,
+                        clientsOutputStreams);
                 executor.execute(clientHandler);
             }
         } catch (IOException e) {

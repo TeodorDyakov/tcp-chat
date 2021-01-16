@@ -21,13 +21,12 @@ public class ChatClient {
         client.start();
     }
 
-    public void sendFile(String inputLine, OutputStream out) throws IOException {
-        PrintWriter pw = new PrintWriter(out, true);
+    public void sendFile(String inputLine, PrintWriter writer, OutputStream out) throws IOException {
         String[] tokens = inputLine.split("\\s+");
 
         File file = new File(tokens[2]);
         long fileSz = file.length();
-        pw.println(inputLine + " " + fileSz);
+        writer.println(inputLine + " " + fileSz);
 
         byte[] bytes = new byte[16 * 1024];
         InputStream in = new FileInputStream(file);
@@ -43,7 +42,10 @@ public class ChatClient {
     public void start() {
         new File("received_files").mkdir();
         try (Socket socket = new Socket(HOST, PORT);
+             Socket fileTransferSocket = new Socket(HOST, PORT);
              var in = socket.getInputStream();
+             var fileTransferSocketInputStream = fileTransferSocket.getInputStream();
+
              PrintWriter writer = new PrintWriter(socket.getOutputStream(), true);
              BufferedReader reader = new BufferedReader(new InputStreamReader(in))
         ) {
@@ -51,14 +53,14 @@ public class ChatClient {
             System.out.println("To login enter: login <username> <password>" +
                 "\nTo register enter register <username> <password>");
 
-            IncomingMessagesHandler incomingMessagesHandler = new IncomingMessagesHandler(reader, in);
+            IncomingMessagesHandler incomingMessagesHandler = new IncomingMessagesHandler(reader, fileTransferSocketInputStream);
             incomingMessagesHandler.start();
 
             while (true) {
                 String message = scanner.nextLine(); // read a line from the console
 
                 if (message.startsWith("send-file")) {
-                    sendFile(message, socket.getOutputStream());
+                    sendFile(message, writer, fileTransferSocket.getOutputStream());
                 } else {
                     writer.println(message); // send the message to the server
                 }

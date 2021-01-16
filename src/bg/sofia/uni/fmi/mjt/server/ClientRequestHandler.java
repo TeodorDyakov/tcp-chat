@@ -14,20 +14,23 @@ import java.util.Map;
 
 public class ClientRequestHandler implements Runnable {
 
-    static final String MESSAGE_TO = "send-msg-to";
+    static final String SEND_MESSAGE_TO = "send-msg-to";
     static final String REGISTER = "register";
     static final String LOGIN = "login";
-    static final String MESSAGE = "send-msg";
+    static final String SEND_MESSAGE = "send-msg";
 
     private final Socket socket;
+    private final Socket fileTransferSocket;
+
     private final Map<String, PrintWriter> clientWriters;
     private final Database database;
     private final Map<String, OutputStream> clientOutputStreams;
     private String loggedInUser;
 
-    ClientRequestHandler(Socket socket, Map<String, PrintWriter> clientWriters, Database database,
+    ClientRequestHandler(Socket socket, Socket fileTransferSocket, Map<String, PrintWriter> clientWriters, Database database,
                          Map<String, OutputStream> clientOutputStreams) {
         this.socket = socket;
+        this.fileTransferSocket = fileTransferSocket;
         this.clientWriters = clientWriters;
         this.database = database;
         this.clientOutputStreams = clientOutputStreams;
@@ -35,10 +38,10 @@ public class ClientRequestHandler implements Runnable {
 
     public void execute(Command cmd, PrintWriter out, OutputStream outputStream) {
         switch (cmd.command()) {
-            case MESSAGE -> message(cmd.arguments(), out);
+            case SEND_MESSAGE -> message(cmd.arguments(), out);
             case LOGIN -> login(cmd.arguments(), out, outputStream);
             case REGISTER -> register(cmd.arguments(), out, outputStream);
-            case MESSAGE_TO -> messageTo(cmd.arguments(), out);
+            case SEND_MESSAGE_TO -> messageTo(cmd.arguments(), out);
             default -> out.println(ServerResponse.INVALID_COMMAND);
         }
     }
@@ -121,13 +124,13 @@ public class ClientRequestHandler implements Runnable {
         execute(command, new PrintWriter(writer, true), out);
     }
 
-    public void transferFile(InputStream in, String inputLine) throws IOException {
+    public synchronized void transferFile(InputStream in, String inputLine) throws IOException {
         String[] tokens = inputLine.split("\\s+");
 
         String user = tokens[1];
         int fileSz = Integer.parseInt(tokens[3]);
 
-        byte[] bytes = new byte[16 * 1024];
+        byte[] bytes = new byte[8192];
         int bytesRead = 0;
         int count;
 
@@ -143,23 +146,25 @@ public class ClientRequestHandler implements Runnable {
             bytesRead += count;
         }
         out.flush();
-//        printWriter.println("[ file received from ]" + loggedInUser);
+        printWriter.printf("[ file received from %s ]\n", loggedInUser);
         clientWriters.get(loggedInUser).println(ServerResponse.FILE_SENT_SUCCESSFULLY);
     }
 
     @Override
     public void run() {
-        try (var out = socket.getOutputStream();
-             var in = socket.getInputStream();
-             var reader = new BufferedReader(new InputStreamReader(in))) {
+        try (var fileTransferOut = fileTransferSocket.getOutputStream();
+             var fileTransferIn = fileTransferSocket.getInputStream();
+             var out = socket.getOutputStream();
+             var in = socket.getInputStream()) {
+            var reader = new BufferedReader(new InputStreamReader(in));
             var writer = new PrintWriter(out, true);
             String inputLine;
             while ((inputLine = reader.readLine()) != null) { // read the message from the client
                 System.out.println("Request received:" + inputLine);
                 if (inputLine.startsWith("send-file")) {
-                    transferFile(in, inputLine);
+                    transferFile(fileTransferIn, inputLine);
                 } else
-                    handleRequest(inputLine, writer, out);
+                    handleRequest(inputLine, writer, fileTransferOut);
             }
         } catch (IOException exception) {
             System.out.println(exception.getMessage());

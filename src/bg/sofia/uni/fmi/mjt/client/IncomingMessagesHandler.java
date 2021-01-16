@@ -22,7 +22,7 @@ public class IncomingMessagesHandler extends Thread {
         String fileName = tokens[2];
         int fileSz = Integer.parseInt(tokens[3]);
 
-        byte[] bytes = new byte[16 * 1024];
+        byte[] bytes = new byte[8192];
         int bytesRead = 0;
         int count;
 
@@ -36,8 +36,6 @@ public class IncomingMessagesHandler extends Thread {
         }
         out.flush();
         out.close();
-        String response = reader.readLine();
-        System.out.println(response);
     }
 
     @Override

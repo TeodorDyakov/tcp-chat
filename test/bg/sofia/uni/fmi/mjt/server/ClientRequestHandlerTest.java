@@ -15,7 +15,7 @@ public class ClientRequestHandlerTest {
         Database database = new Database(new StringReader(""), new StringWriter());
         database.readDatabaseToMemory();
 
-        ClientRequestHandler clientRequestHandler = new ClientRequestHandler(null, new ConcurrentHashMap<>(),
+        ClientRequestHandler clientRequestHandler = new ClientRequestHandler(null, null, new ConcurrentHashMap<>(),
             database, new ConcurrentHashMap<>());
         StringWriter writer = new StringWriter();
         clientRequestHandler.handleRequest("register kolio kote", writer, null);
@@ -27,7 +27,7 @@ public class ClientRequestHandlerTest {
     public void handleRequestLoginTest() {
         Database database = new Database(new StringReader("tedy:123"), null);
         database.readDatabaseToMemory();
-        ClientRequestHandler clientRequestHandler = new ClientRequestHandler(null, new ConcurrentHashMap<>(),
+        ClientRequestHandler clientRequestHandler = new ClientRequestHandler(null, null, new ConcurrentHashMap<>(),
             database, new ConcurrentHashMap<>());
         StringWriter writer = new StringWriter();
         clientRequestHandler.handleRequest("login tedy 123", writer, System.out);
@@ -39,7 +39,7 @@ public class ClientRequestHandlerTest {
     public void handleRequestMessageTest() {
         Database database = new Database(new StringReader("tedy:123\nana:banana"), null);
         database.readDatabaseToMemory();
-        ClientRequestHandler clientRequestHandler = new ClientRequestHandler(null, new ConcurrentHashMap<>(),
+        ClientRequestHandler clientRequestHandler = new ClientRequestHandler(null, null, new ConcurrentHashMap<>(),
             database, new ConcurrentHashMap<>());
         StringWriter writer = new StringWriter();
         clientRequestHandler.handleRequest("msg-to tedy hello", writer, System.out);
