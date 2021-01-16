@@ -176,7 +176,12 @@ public class ClientRequestHandler implements Runnable {
             try {
                 socket.close();
             } catch (IOException exception) {
-                System.out.println(exception.getMessage());
+                exception.printStackTrace();
+            }
+            try {
+                fileTransferSocket.close();
+            } catch (IOException exception) {
+                exception.printStackTrace();
             }
         }
     }
