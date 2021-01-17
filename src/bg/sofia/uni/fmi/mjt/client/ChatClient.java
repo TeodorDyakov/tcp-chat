@@ -23,11 +23,9 @@ public class ChatClient {
         try (Socket socket = new Socket(HOST, PORT);
              Socket fileTransferSocket = new Socket(HOST, PORT);
              var in = socket.getInputStream();
-             var fileTransferSocketInputStream = fileTransferSocket.getInputStream();
-
-             PrintWriter writer = new PrintWriter(socket.getOutputStream(), true);
-             BufferedReader reader = new BufferedReader(new InputStreamReader(in))
-        ) {
+             var fileTransferSocketInputStream = fileTransferSocket.getInputStream()) {
+            PrintWriter writer = new PrintWriter(socket.getOutputStream(), true);
+            BufferedReader reader = new BufferedReader(new InputStreamReader(in));
             Scanner scanner = new Scanner(System.in);
             System.out.println("To login enter: login <username> <password>" +
                 "\nTo register enter register <username> <password>");
@@ -43,7 +41,7 @@ public class ChatClient {
                     Thread fileSendHandler = new FileSendHandler(message, writer, fileTransferSocket.getOutputStream());
                     fileSendHandler.start();
                 } else {
-                    writer.println(message); // send the message to the server
+                    MessageSender.sendMessage(writer, message); // send the message to the server
                 }
 
                 if (message.equals("quit")) {

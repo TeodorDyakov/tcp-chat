@@ -34,7 +34,7 @@ public class FileReceiveHandler extends Thread {
                 bytesRead += count;
             }
         } catch (IOException e) {
-            System.out.println(e.getMessage());
+            ConsoleOutput.printLineToConsole(e.getMessage());
             receivedFile.delete();
         }
         ConsoleOutput.printLineToConsole("[ file " + fileName + " received ]");

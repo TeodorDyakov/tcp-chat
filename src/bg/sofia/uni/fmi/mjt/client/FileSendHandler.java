@@ -23,7 +23,7 @@ public class FileSendHandler extends Thread {
 
         File file = new File(tokens[2]);
         long fileSz = file.length();
-        writer.println(inputLine + " " + fileSz);
+        MessageSender.sendMessage(writer, inputLine + " " + fileSz);
 
         byte[] bytes = new byte[16 * 1024];
         try {
