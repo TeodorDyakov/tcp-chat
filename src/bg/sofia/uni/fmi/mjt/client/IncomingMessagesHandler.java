@@ -8,10 +8,12 @@ public class IncomingMessagesHandler extends Thread {
 
     BufferedReader reader;
     InputStream in;
+    ConsolePrinter consolePrinter;
 
-    IncomingMessagesHandler(BufferedReader reader, InputStream in) {
+    IncomingMessagesHandler(BufferedReader reader, InputStream in, ConsolePrinter consolePrinter) {
         this.reader = reader;
         this.in = in;
+        this.consolePrinter = consolePrinter;
     }
 
     @Override
@@ -20,18 +22,18 @@ public class IncomingMessagesHandler extends Thread {
         while (true) {
             try {
                 if ((inputLine = reader.readLine()) == null) {
-                    ConsoleOutput.printLineToConsole("could not read from server");
+                    consolePrinter.printLineToConsole("could not read from server");
                     break;
                 }
             } catch (IOException exception) {
-                ConsoleOutput.printLineToConsole("could not read from server");
+                consolePrinter.printLineToConsole("could not read from server");
                 break;
             }
             if (inputLine.startsWith("send-file")) {
-                Thread fileReceiveHandler = new FileReceiveHandler(inputLine, in);
+                Thread fileReceiveHandler = new FileReceiveHandler(inputLine, in, consolePrinter);
                 fileReceiveHandler.start();
             } else {
-                ConsoleOutput.printLineToConsole(inputLine);
+                consolePrinter.printLineToConsole(inputLine);
             }
         }
     }

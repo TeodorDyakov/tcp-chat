@@ -10,8 +10,10 @@ import java.util.Scanner;
 
 public class ChatClient {
 
-    public static final int PORT = 54545;
-    public static final String HOST = "localhost";
+    public final int PORT = 54545;
+    public final String HOST = "localhost";
+    ConsolePrinter consolePrinter = new ConsolePrinter();
+    MessageSender messageSender;
 
     public static void main(String[] args) {
         ChatClient client = new ChatClient();
@@ -31,17 +33,19 @@ public class ChatClient {
                 "\nTo register enter register <username> <password>");
 
             IncomingMessagesHandler incomingMessagesHandler =
-                new IncomingMessagesHandler(reader, fileTransferSocketInputStream);
+                new IncomingMessagesHandler(reader, fileTransferSocketInputStream, consolePrinter);
             incomingMessagesHandler.start();
-
+            MessageSender messageSender = new MessageSender(writer);
             while (true) {
                 String message = scanner.nextLine(); // read a line from the console
 
                 if (message.startsWith("send-file")) {
-                    Thread fileSendHandler = new FileSendHandler(message, writer, fileTransferSocket.getOutputStream());
+                    Thread fileSendHandler =
+                        new FileSendHandler(message, messageSender, fileTransferSocket.getOutputStream(),
+                            consolePrinter);
                     fileSendHandler.start();
                 } else {
-                    MessageSender.sendMessage(writer, message); // send the message to the server
+                    messageSender.sendMessage(message); // send the message to the server
                 }
 
                 if (message.equals("quit")) {

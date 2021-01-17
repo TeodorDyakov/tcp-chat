@@ -8,10 +8,12 @@ import java.io.InputStream;
 public class FileReceiveHandler extends Thread {
     String inputLine;
     InputStream in;
+    ConsolePrinter consolePrinter;
 
-    FileReceiveHandler(String inputLine, InputStream in) {
+    FileReceiveHandler(String inputLine, InputStream in, ConsolePrinter consolePrinter) {
         this.inputLine = inputLine;
         this.in = in;
+        this.consolePrinter = consolePrinter;
     }
 
     public void receiveFile() {
@@ -34,10 +36,10 @@ public class FileReceiveHandler extends Thread {
                 bytesRead += count;
             }
         } catch (IOException e) {
-            ConsoleOutput.printLineToConsole(e.getMessage());
+            consolePrinter.printLineToConsole(e.getMessage());
             receivedFile.delete();
         }
-        ConsoleOutput.printLineToConsole("[ file " + fileName + " received ]");
+        consolePrinter.printLineToConsole("[ file " + fileName + " received ]");
     }
 
     @Override

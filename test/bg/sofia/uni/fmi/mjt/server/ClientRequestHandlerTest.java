@@ -3,11 +3,14 @@ package bg.sofia.uni.fmi.mjt.server;
 import org.junit.Test;
 
 import java.io.OutputStream;
+import java.io.PrintWriter;
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class ClientRequestHandlerTest {
 
@@ -50,4 +53,27 @@ public class ClientRequestHandlerTest {
         clientRequestHandler.handleRequest("send-msg-to tedy hello", writer, OutputStream.nullOutputStream());
         assertEquals(writer.toString(), "[ no user with this name online ]\n");
     }
+
+    @Test
+    public void handleRequestMessageUserOnlineTest() {
+        Database database = new Database(new StringReader("tedy:123\nana:banana"), null);
+        database.readDatabaseToMemory();
+        Map<String, PrintWriter> clientWriters = new ConcurrentHashMap<>();
+
+        StringWriter anaStringWriter = new StringWriter();
+        PrintWriter anaWriter = new PrintWriter(anaStringWriter);
+        clientWriters.put("ana", anaWriter);
+
+        ClientRequestHandler clientRequestHandler = new ClientRequestHandler(null, null, clientWriters,
+            database, new ConcurrentHashMap<>());
+
+        StringWriter writer = new StringWriter();
+        clientRequestHandler.handleRequest("login tedy 123", writer, OutputStream.nullOutputStream());
+        clientRequestHandler.handleRequest("send-msg-to ana hello", writer, OutputStream.nullOutputStream());
+        assertTrue(writer.toString().contains("hello"));
+        assertTrue(anaStringWriter.toString().contains("hello"));
+        clientRequestHandler.handleRequest("send-msg \"cats are cool\"", writer, OutputStream.nullOutputStream());
+        assertTrue(anaStringWriter.toString().contains("cats are cool"));
+    }
+
 }

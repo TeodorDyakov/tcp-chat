@@ -5,17 +5,19 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.PrintWriter;
 
 public class FileSendHandler extends Thread {
     String inputLine;
-    PrintWriter writer;
+    MessageSender messageSender;
     OutputStream out;
+    ConsolePrinter consolePrinter;
 
-    public FileSendHandler(String inputLine, PrintWriter writer, OutputStream out) {
+    public FileSendHandler(String inputLine, MessageSender messageSender, OutputStream out,
+                           ConsolePrinter consolePrinter) {
         this.inputLine = inputLine;
-        this.writer = writer;
+        this.messageSender = messageSender;
         this.out = out;
+        this.consolePrinter = consolePrinter;
     }
 
     public void sendFile() {
@@ -23,7 +25,7 @@ public class FileSendHandler extends Thread {
 
         File file = new File(tokens[2]);
         long fileSz = file.length();
-        MessageSender.sendMessage(writer, inputLine + " " + fileSz);
+        messageSender.sendMessage(inputLine + " " + fileSz);
 
         byte[] bytes = new byte[16 * 1024];
         try {
@@ -37,7 +39,7 @@ public class FileSendHandler extends Thread {
             out.flush();
         } catch (
             IOException e) {
-            System.out.println("error when sending file");
+            consolePrinter.printLineToConsole("error when sending file");
         }
     }
 
