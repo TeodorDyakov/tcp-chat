@@ -2,11 +2,8 @@ package bg.sofia.uni.fmi.mjt.client;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.Scanner;
@@ -19,24 +16,6 @@ public class ChatClient {
     public static void main(String[] args) {
         ChatClient client = new ChatClient();
         client.start();
-    }
-
-    public void sendFile(String inputLine, PrintWriter writer, OutputStream out) throws IOException {
-        String[] tokens = inputLine.split("\\s+");
-
-        File file = new File(tokens[2]);
-        long fileSz = file.length();
-        writer.println(inputLine + " " + fileSz);
-
-        byte[] bytes = new byte[16 * 1024];
-        InputStream in = new FileInputStream(file);
-
-        int count;
-        while ((count = in.read(bytes)) > 0) {
-            out.write(bytes, 0, count);
-        }
-        in.close();
-        out.flush();
     }
 
     public void start() {
@@ -61,7 +40,8 @@ public class ChatClient {
                 String message = scanner.nextLine(); // read a line from the console
 
                 if (message.startsWith("send-file")) {
-                    sendFile(message, writer, fileTransferSocket.getOutputStream());
+                    Thread fileSendHandler = new FileSendHandler(message, writer, fileTransferSocket.getOutputStream());
+                    fileSendHandler.start();
                 } else {
                     writer.println(message); // send the message to the server
                 }

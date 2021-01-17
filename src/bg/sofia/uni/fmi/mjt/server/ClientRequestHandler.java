@@ -129,32 +129,6 @@ public class ClientRequestHandler implements Runnable {
         execute(command, new PrintWriter(writer, true), out);
     }
 
-    public synchronized void transferFile(InputStream in, String inputLine) throws IOException {
-        String[] tokens = inputLine.split("\\s+");
-
-        String user = tokens[1];
-        int fileSz = Integer.parseInt(tokens[3]);
-
-        byte[] bytes = new byte[8192];
-        int bytesRead = 0;
-        int count;
-
-        var printWriter = clientWriters.get(user);
-        var out = clientOutputStreams.get(user);
-        if (out == null) {
-            return;
-        }
-        sendLineToClient(inputLine, printWriter);
-
-        while (bytesRead < fileSz && (count = in.read(bytes)) > 0) {
-            out.write(bytes, 0, count);
-            bytesRead += count;
-        }
-        out.flush();
-        sendLineToClient("[ file received from " + loggedInUser + "]", printWriter);
-        sendLineToClient(ServerResponse.FILE_SENT_SUCCESSFULLY, clientWriters.get(loggedInUser));
-    }
-
     @Override
     public void run() {
         try (var fileTransferOut = fileTransferSocket.getOutputStream();
@@ -166,7 +140,8 @@ public class ClientRequestHandler implements Runnable {
             while ((inputLine = reader.readLine()) != null) { // read the message from the client
                 System.out.println("Request received:" + inputLine);
                 if (inputLine.startsWith("send-file")) {
-                    transferFile(fileTransferIn, inputLine);
+                    Thread fileTransferHandler = new FileTransferHandler(fileTransferIn, inputLine);
+                    fileTransferHandler.start();
                 } else
                     handleRequest(inputLine, writer, fileTransferOut);
             }
@@ -182,6 +157,51 @@ public class ClientRequestHandler implements Runnable {
                 fileTransferSocket.close();
             } catch (IOException exception) {
                 exception.printStackTrace();
+            }
+        }
+    }
+
+    class FileTransferHandler extends Thread {
+
+        InputStream in;
+        String inputLine;
+
+        FileTransferHandler(InputStream in, String inputLine) {
+            this.in = in;
+            this.inputLine = inputLine;
+        }
+
+        public synchronized void transferFile(InputStream in, String inputLine) throws IOException {
+            String[] tokens = inputLine.split("\\s+");
+
+            String user = tokens[1];
+            int fileSz = Integer.parseInt(tokens[3]);
+
+            byte[] bytes = new byte[8192];
+            int bytesRead = 0;
+            int count;
+
+            var printWriter = clientWriters.get(user);
+            var out = clientOutputStreams.get(user);
+            if (out == null) {
+                return;
+            }
+            sendLineToClient(inputLine, printWriter);
+
+            while (bytesRead < fileSz && (count = in.read(bytes)) > 0) {
+                out.write(bytes, 0, count);
+                bytesRead += count;
+            }
+            out.flush();
+            sendLineToClient(ServerResponse.FILE_SENT_SUCCESSFULLY, clientWriters.get(loggedInUser));
+        }
+
+        @Override
+        public void run() {
+            try {
+                transferFile(in, inputLine);
+            } catch (IOException exception) {
+                System.out.println("error when transferring file");
             }
         }
     }
