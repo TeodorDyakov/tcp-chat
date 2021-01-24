@@ -13,7 +13,6 @@ public class ChatClient {
     public final int PORT = 54545;
     public final String HOST = "localhost";
     ConsolePrinter consolePrinter = new ConsolePrinter();
-    MessageSender messageSender;
 
     public static void main(String[] args) {
         ChatClient client = new ChatClient();
