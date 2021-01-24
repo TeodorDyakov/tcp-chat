@@ -2,6 +2,8 @@ package bg.sofia.uni.fmi.mjt.server;
 
 import org.junit.Test;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.StringReader;
@@ -9,71 +11,60 @@ import java.io.StringWriter;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 public class ClientRequestHandlerTest {
 
     @Test
-    public void handleRequestRegisterTest() {
-        Database database = new Database(new StringReader(""), new StringWriter());
-        database.readDatabaseToMemory();
-
-        ClientRequestHandler clientRequestHandler = new ClientRequestHandler(null, null, new ConcurrentHashMap<>(),
-            database, new ConcurrentHashMap<>());
-        StringWriter writer = new StringWriter();
-        clientRequestHandler.handleRequest("register kolio kote", writer, OutputStream.nullOutputStream());
-        assertEquals(writer.toString(), ServerResponse.REGISTERED + System.lineSeparator() +
-            "kolio has joined the chat" + System.lineSeparator());
-    }
-
-    @Test
-    public void handleRequestLoginTest() {
-        Database database = new Database(new StringReader("tedy:123"), null);
-        database.readDatabaseToMemory();
-        ClientRequestHandler clientRequestHandler = new ClientRequestHandler(null, null, new ConcurrentHashMap<>(),
-            database, new ConcurrentHashMap<>());
-        StringWriter writer = new StringWriter();
-        clientRequestHandler.handleRequest("login tedy 123", writer, OutputStream.nullOutputStream());
-        assertEquals(writer.toString(), ServerResponse.LOGGED_IN + System.lineSeparator() +
-            "tedy has joined the chat" + System.lineSeparator());
-    }
-
-    @Test
-    public void handleRequestMessageTest() {
-        Database database = new Database(new StringReader("tedy:123\nana:banana"), null);
-        database.readDatabaseToMemory();
-        ClientRequestHandler clientRequestHandler = new ClientRequestHandler(null, null, new ConcurrentHashMap<>(),
-            database, new ConcurrentHashMap<>());
-        StringWriter writer = new StringWriter();
-        clientRequestHandler.handleRequest("send-msg-to tedy hello", writer, OutputStream.nullOutputStream());
-        assertEquals(writer.toString(), ServerResponse.NOT_LOGGED_IN + System.lineSeparator());
-        clientRequestHandler.handleRequest("login ana banana", writer, OutputStream.nullOutputStream());
-        writer = new StringWriter();
-        clientRequestHandler.handleRequest("send-msg-to tedy hello", writer, OutputStream.nullOutputStream());
-        assertEquals(writer.toString(), "[ no user with this name online ]\n");
-    }
-
-    @Test
-    public void handleRequestMessageUserOnlineTest() {
-        Database database = new Database(new StringReader("tedy:123\nana:banana"), null);
+    public void handleRequest() {
+        Database database = new Database(new StringReader("ana:banana"), new StringWriter());
         database.readDatabaseToMemory();
         Map<String, PrintWriter> clientWriters = new ConcurrentHashMap<>();
-
+        Map<String, OutputStream> outputStreamMap = new ConcurrentHashMap<>();
         StringWriter anaStringWriter = new StringWriter();
+
         PrintWriter anaWriter = new PrintWriter(anaStringWriter);
+        PrintWriter guestWriter = new PrintWriter(new StringWriter());
+
         clientWriters.put("ana", anaWriter);
 
         ClientRequestHandler clientRequestHandler = new ClientRequestHandler(null, null, clientWriters,
-            database, new ConcurrentHashMap<>());
+            database, outputStreamMap);
 
-        StringWriter writer = new StringWriter();
-        clientRequestHandler.handleRequest("login tedy 123", writer, OutputStream.nullOutputStream());
-        clientRequestHandler.handleRequest("send-msg-to ana hello", writer, OutputStream.nullOutputStream());
-        assertTrue(writer.toString().contains("hello"));
-        assertTrue(anaStringWriter.toString().contains("hello"));
-        clientRequestHandler.handleRequest("send-msg \"cats are cool\"", writer, OutputStream.nullOutputStream());
-        assertTrue(anaStringWriter.toString().contains("cats are cool"));
+        clientWriters.put(clientRequestHandler.getCurrentUserID(), guestWriter);
+        outputStreamMap.put(clientRequestHandler.getCurrentUserID(), OutputStream.nullOutputStream());
+
+        clientRequestHandler.handleRequest("register tedy 123");
+
+        clientRequestHandler.handleRequest("send-msg \"hello from moscow\"");
+        assertTrue(anaStringWriter.toString().contains("hello from moscow"));
+
+        clientRequestHandler.handleRequest("send-msg-to ana \"hi\"");
+        assertTrue(anaStringWriter.toString().contains("hi"));
+    }
+
+    @Test
+    public void fileTransferTest() {
+        Database database = new Database(new StringReader("ana:banana"), new StringWriter());
+        database.readDatabaseToMemory();
+        Map<String, PrintWriter> clientWriters = new ConcurrentHashMap<>();
+        Map<String, OutputStream> outputStreamMap = new ConcurrentHashMap<>();
+        StringWriter anaStringWriter = new StringWriter();
+
+        PrintWriter anaWriter = new PrintWriter(anaStringWriter);
+
+        ClientRequestHandler clientRequestHandler = new ClientRequestHandler(null, null, clientWriters,
+            database, outputStreamMap);
+
+        clientWriters.put(clientRequestHandler.getCurrentUserID(), anaWriter);
+        outputStreamMap.put(clientRequestHandler.getCurrentUserID(), OutputStream.nullOutputStream());
+        outputStreamMap.put("ana", OutputStream.nullOutputStream());
+        clientRequestHandler.loginUser("ana");
+        String initialString = "text";
+        InputStream targetStream = new ByteArrayInputStream(initialString.getBytes());
+
+        clientRequestHandler.transferFile(targetStream, "send-file ana A.txt 4");
+        assertTrue(anaStringWriter.toString().contains(ServerResponse.FILE_SENT_SUCCESSFULLY));
     }
 
 }

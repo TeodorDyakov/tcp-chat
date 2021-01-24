@@ -7,7 +7,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 public class FileReceiveHandlerTest {
 
@@ -20,7 +20,7 @@ public class FileReceiveHandlerTest {
         final var fileLength = fileContents.length();
         final var inputStream = new ByteArrayInputStream("file contents".getBytes(StandardCharsets.UTF_8));
 
-        final var fileReceiveHandler  = new FileReceiveHandler("send-file tedy test.txt " + fileLength,
+        final var fileReceiveHandler = new FileReceiveHandler("send-file tedy test.txt " + fileLength,
             inputStream, new ConsolePrinter());
         fileReceiveHandler.receiveFile();
         assertEquals("[ file test.txt received ]", outputStreamCaptor.toString()

@@ -25,7 +25,7 @@ public class FileSendHandlerTest {
         final var messageSender = new MessageSender(writer);
         final var byteArrayOutputStream = new ByteArrayOutputStream();
         final var fileSendHandler = new FileSendHandler("send-file tedy A.txt", messageSender,
-            byteArrayOutputStream,new ConsolePrinter());
+            byteArrayOutputStream, new ConsolePrinter());
         fileSendHandler.sendFile();
         assertEquals(stringWriter.toString(), "send-file tedy A.txt " + fileLength + System.lineSeparator());
         assertEquals(fileContents, byteArrayOutputStream.toString());

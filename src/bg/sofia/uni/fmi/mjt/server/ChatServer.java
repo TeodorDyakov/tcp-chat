@@ -1,5 +1,8 @@
 package bg.sofia.uni.fmi.mjt.server;
 
+import bg.sofia.uni.fmi.mjt.server.exceptions.CouldNotSetUpDatabaseException;
+import bg.sofia.uni.fmi.mjt.server.exceptions.SocketCreationException;
+
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -21,9 +24,14 @@ public class ChatServer {
     Database database;
     Map<String, OutputStream> clientsOutputStreams = new ConcurrentHashMap<>();
 
+
     public static void main(String[] args) {
         ChatServer server = new ChatServer();
-        server.start();
+        try {
+            server.start();
+        } catch (CouldNotSetUpDatabaseException | SocketCreationException e) {
+            System.out.println(e.getMessage());
+        }
     }
 
     public void setUpDatabase() throws IOException {
@@ -33,24 +41,34 @@ public class ChatServer {
         database.readDatabaseToMemory();
     }
 
-    public void start() {
+    public void start() throws CouldNotSetUpDatabaseException, SocketCreationException {
         try {
             setUpDatabase();
-            int maxExecutorThreads = 128;
-            ExecutorService executor = Executors.newFixedThreadPool(maxExecutorThreads);
+        } catch (IOException exception) {
+            throw new CouldNotSetUpDatabaseException("could not set up database!");
+        }
+        int maxExecutorThreads = 128;
+        ExecutorService executor = Executors.newFixedThreadPool(maxExecutorThreads);
+        try {
             serverSocket = new ServerSocket(PORT);
-            Socket clientSocket;
-            Socket fileTransferSocket;
-            while (true) {
+        } catch (IOException exception) {
+            throw new SocketCreationException("could not create server!");
+        }
+
+        Socket clientSocket;
+        Socket fileTransferSocket;
+        while (true) {
+            try {
                 clientSocket = serverSocket.accept();
                 fileTransferSocket = serverSocket.accept();
-                ClientRequestHandler clientHandler =
-                    new ClientRequestHandler(clientSocket, fileTransferSocket, usernameToWriters, database,
-                        clientsOutputStreams);
-                executor.execute(clientHandler);
+            } catch (IOException exception) {
+                exception.printStackTrace();
+                continue;
             }
-        } catch (IOException e) {
-            System.out.println("There is a problem with the network communication");
+            ClientRequestHandler clientHandler =
+                new ClientRequestHandler(clientSocket, fileTransferSocket, usernameToWriters, database,
+                    clientsOutputStreams);
+            executor.execute(clientHandler);
         }
     }
 
