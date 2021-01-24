@@ -22,7 +22,7 @@ public class FileSendHandler extends Thread {
 
     public void sendFile() {
         String[] tokens = inputLine.split("\\s+");
-        if(tokens.length < 3){
+        if (tokens.length < 3) {
             consolePrinter.printLineToConsole("not enough arguments!");
             return;
         }

@@ -16,7 +16,7 @@ public class FileReceiveHandler extends Thread {
         this.consolePrinter = consolePrinter;
     }
 
-    public void receiveFile() {
+    void receiveFile() {
         String[] tokens = inputLine.split("\\s+");
 
         String fileName = tokens[2];

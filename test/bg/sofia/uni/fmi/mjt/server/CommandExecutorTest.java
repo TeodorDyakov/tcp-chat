@@ -24,11 +24,11 @@ public class CommandExecutorTest {
         ClientRequestHandler clientRequestHandler = new ClientRequestHandler(null, null, clientWriters,
             database, outputStreamMap);
 
-        clientWriters.put(clientRequestHandler.getCurrentUserID(), guestWriter);
-        outputStreamMap.put(clientRequestHandler.getCurrentUserID(), OutputStream.nullOutputStream());
+        clientWriters.put(clientRequestHandler.getCurrentGuestID(), guestWriter);
+        outputStreamMap.put(clientRequestHandler.getCurrentGuestID(), OutputStream.nullOutputStream());
         CommandExecutor cmdExec = new CommandExecutor(clientRequestHandler);
         var res = cmdExec.execute(CommandCreator.newCommand("login tedy 123"));
-        assertTrue(res.get(clientRequestHandler.getCurrentUserID()).contains(ServerResponse.INVALID_USERNAME_OR_PASS));
+        assertTrue(res.get(clientRequestHandler.getCurrentGuestID()).contains(ServerResponse.INVALID_USERNAME_OR_PASS));
         res = cmdExec.execute(CommandCreator.newCommand("login ana banana"));
         System.out.println(res);
         assertTrue(res.get("ana").contains(ServerResponse.LOGGED_IN));

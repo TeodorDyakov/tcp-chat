@@ -12,14 +12,14 @@ public class ChatClient {
 
     public final int PORT = 54545;
     public final String HOST = "localhost";
-    ConsolePrinter consolePrinter = new ConsolePrinter();
+    private final ConsolePrinter consolePrinter = new ConsolePrinter();
 
     public static void main(String[] args) {
         ChatClient client = new ChatClient();
         client.start();
     }
 
-    public void start() {
+    void start() {
         new File("received_files").mkdir();
         try (Socket socket = new Socket(HOST, PORT);
              Socket fileTransferSocket = new Socket(HOST, PORT);

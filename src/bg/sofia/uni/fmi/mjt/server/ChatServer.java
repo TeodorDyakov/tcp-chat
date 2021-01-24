@@ -1,7 +1,7 @@
 package bg.sofia.uni.fmi.mjt.server;
 
 import bg.sofia.uni.fmi.mjt.server.exceptions.CouldNotSetUpDatabaseException;
-import bg.sofia.uni.fmi.mjt.server.exceptions.SocketCreationException;
+import bg.sofia.uni.fmi.mjt.server.exceptions.ServerCreationException;
 
 import java.io.File;
 import java.io.FileReader;
@@ -19,17 +19,15 @@ import java.util.concurrent.Executors;
 public class ChatServer {
 
     public final int PORT = 54545;
-    ServerSocket serverSocket;
-    Map<String, PrintWriter> usernameToWriters = new ConcurrentHashMap<>();
-    Database database;
-    Map<String, OutputStream> clientsOutputStreams = new ConcurrentHashMap<>();
-
+    private final Map<String, PrintWriter> usernameToWriters = new ConcurrentHashMap<>();
+    private final Map<String, OutputStream> clientsOutputStreams = new ConcurrentHashMap<>();
+    private Database database;
 
     public static void main(String[] args) {
         ChatServer server = new ChatServer();
         try {
             server.start();
-        } catch (CouldNotSetUpDatabaseException | SocketCreationException e) {
+        } catch (CouldNotSetUpDatabaseException | ServerCreationException e) {
             System.out.println(e.getMessage());
         }
     }
@@ -41,18 +39,19 @@ public class ChatServer {
         database.readDatabaseToMemory();
     }
 
-    public void start() throws CouldNotSetUpDatabaseException, SocketCreationException {
+    public void start() throws CouldNotSetUpDatabaseException, ServerCreationException {
         try {
             setUpDatabase();
         } catch (IOException exception) {
-            throw new CouldNotSetUpDatabaseException("could not set up database!");
+            throw new CouldNotSetUpDatabaseException("could not set up database!", exception);
         }
         int maxExecutorThreads = 128;
         ExecutorService executor = Executors.newFixedThreadPool(maxExecutorThreads);
+        ServerSocket serverSocket;
         try {
             serverSocket = new ServerSocket(PORT);
         } catch (IOException exception) {
-            throw new SocketCreationException("could not create server!");
+            throw new ServerCreationException("could not create server!", exception);
         }
 
         Socket clientSocket;

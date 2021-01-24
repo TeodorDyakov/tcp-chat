@@ -13,8 +13,8 @@ import java.util.Set;
 
 public class ClientRequestHandler implements Runnable {
 
-    static int idNum = 0;
-    public final String currentGuestID;
+    static private int idNum = 0;
+    private final String currentGuestID;
     private final Socket socket;
     private final Socket fileTransferSocket;
     private final Map<String, PrintWriter> clientWriters;
@@ -34,23 +34,23 @@ public class ClientRequestHandler implements Runnable {
         this.currentGuestID = "guest" + idNum;
     }
 
-    public String getLoggedInUser() {
+    String getLoggedInUser() {
         return loggedInUser;
     }
 
-    public Set<String> getLoggedInUsers() {
+    Set<String> getLoggedInUsers() {
         return new HashSet<>(clientWriters.keySet());
     }
 
-    public Database getDatabase() {
+    Database getDatabase() {
         return database;
     }
 
-    public boolean isUserOnline(String user) {
+    boolean isUserOnline(String user) {
         return clientWriters.containsKey(user);
     }
 
-    public synchronized void loginUser(String username) {
+    synchronized void loginUser(String username) {
         loggedInUser = username;
         var loggedInUserWriter = clientWriters.get(currentGuestID);
         clientWriters.put(username, loggedInUserWriter);
@@ -60,7 +60,7 @@ public class ClientRequestHandler implements Runnable {
         clientFileTransferOutputStreams.remove(currentGuestID);
     }
 
-    public String getCurrentUserID() {
+    String getCurrentGuestID() {
         return currentGuestID;
     }
 
@@ -68,7 +68,7 @@ public class ClientRequestHandler implements Runnable {
         to.println(msg);
     }
 
-    public void handleRequest(String inputLine) {
+    void handleRequest(String inputLine) {
         CommandExecutor cmdExec = new CommandExecutor(this);
         Command command = CommandCreator.newCommand(inputLine);
         var commandResult = cmdExec.execute(command);
@@ -111,11 +111,7 @@ public class ClientRequestHandler implements Runnable {
         }
     }
 
-    public OutputStream getFileOutputStreamOfUser(String user) {
-        return clientFileTransferOutputStreams.get(user);
-    }
-
-    public synchronized void transferFile(InputStream in, String inputLine) {
+    synchronized void transferFile(InputStream in, String inputLine) {
         if (loggedInUser == null) {
             sendLineToClient(ServerResponse.NOT_LOGGED_IN, clientWriters.get(currentGuestID));
         }
@@ -145,7 +141,7 @@ public class ClientRequestHandler implements Runnable {
             out.flush();
             sendLineToClient(ServerResponse.FILE_SENT_SUCCESSFULLY, clientWriters.get(loggedInUser));
         } catch (IOException e) {
-            sendLineToClient("file transfer failed", clientWriters.get(loggedInUser));
+            sendLineToClient(ServerResponse.FILE_TRANSFER_FAILED, clientWriters.get(loggedInUser));
             System.out.println(e.getMessage());
         }
     }

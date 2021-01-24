@@ -31,8 +31,8 @@ public class ClientRequestHandlerTest {
         ClientRequestHandler clientRequestHandler = new ClientRequestHandler(null, null, clientWriters,
             database, outputStreamMap);
 
-        clientWriters.put(clientRequestHandler.getCurrentUserID(), guestWriter);
-        outputStreamMap.put(clientRequestHandler.getCurrentUserID(), OutputStream.nullOutputStream());
+        clientWriters.put(clientRequestHandler.getCurrentGuestID(), guestWriter);
+        outputStreamMap.put(clientRequestHandler.getCurrentGuestID(), OutputStream.nullOutputStream());
 
         clientRequestHandler.handleRequest("register tedy 123");
 
@@ -56,8 +56,8 @@ public class ClientRequestHandlerTest {
         ClientRequestHandler clientRequestHandler = new ClientRequestHandler(null, null, clientWriters,
             database, outputStreamMap);
 
-        clientWriters.put(clientRequestHandler.getCurrentUserID(), anaWriter);
-        outputStreamMap.put(clientRequestHandler.getCurrentUserID(), OutputStream.nullOutputStream());
+        clientWriters.put(clientRequestHandler.getCurrentGuestID(), anaWriter);
+        outputStreamMap.put(clientRequestHandler.getCurrentGuestID(), OutputStream.nullOutputStream());
         outputStreamMap.put("ana", OutputStream.nullOutputStream());
         clientRequestHandler.loginUser("ana");
         String initialString = "text";

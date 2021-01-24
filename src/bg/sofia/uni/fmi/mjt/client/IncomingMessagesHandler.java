@@ -6,9 +6,9 @@ import java.io.InputStream;
 
 public class IncomingMessagesHandler extends Thread {
 
-    BufferedReader reader;
-    InputStream in;
-    ConsolePrinter consolePrinter;
+    private final BufferedReader reader;
+    private final InputStream in;
+    private final ConsolePrinter consolePrinter;
 
     IncomingMessagesHandler(BufferedReader reader, InputStream in, ConsolePrinter consolePrinter) {
         this.reader = reader;
