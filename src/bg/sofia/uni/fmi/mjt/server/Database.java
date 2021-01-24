@@ -27,7 +27,7 @@ public class Database {
         return userToPassword.containsKey(user);
     }
 
-    public void readDatabaseToMemory() {
+    public synchronized void readDatabaseToMemory() {
         try {
             BufferedReader bufferedReader = new BufferedReader(reader);
             String line = bufferedReader.readLine();
@@ -43,7 +43,7 @@ public class Database {
         }
     }
 
-    public void savePassAndName(String username, String pass) {
+    public synchronized void savePassAndName(String username, String pass) {
         userToPassword.put(username, pass);
         BufferedWriter bufferedWriter = new BufferedWriter(writer);
         try {

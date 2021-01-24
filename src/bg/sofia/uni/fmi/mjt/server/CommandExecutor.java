@@ -101,7 +101,7 @@ public class CommandExecutor {
                 message);
     }
 
-    synchronized Map<String, String> register(String[] arguments) {
+    Map<String, String> register(String[] arguments) {
         var result = new HashMap<String, String>();
 
         if (arguments.length < 2) {

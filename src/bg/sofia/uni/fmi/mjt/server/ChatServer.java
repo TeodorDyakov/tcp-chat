@@ -11,16 +11,16 @@ import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class ChatServer {
 
     public final int PORT = 54545;
-    private final Map<String, PrintWriter> usernameToWriters = new ConcurrentHashMap<>();
-    private final Map<String, OutputStream> clientsOutputStreams = new ConcurrentHashMap<>();
+    private final Map<String, PrintWriter> usernameToWriters = new HashMap<>();
+    private final Map<String, OutputStream> clientsOutputStreams = new HashMap<>();
     private Database database;
 
     public static void main(String[] args) {

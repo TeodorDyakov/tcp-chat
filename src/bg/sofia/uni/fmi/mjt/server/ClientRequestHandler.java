@@ -64,8 +64,10 @@ public class ClientRequestHandler implements Runnable {
         return currentGuestID;
     }
 
-    synchronized void sendLineToClient(String msg, PrintWriter to) {
-        to.println(msg);
+    void sendLineToClient(String msg, PrintWriter to) {
+        synchronized (to) {
+            to.println(msg);
+        }
     }
 
     void handleRequest(String inputLine) {
