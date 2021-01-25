@@ -18,7 +18,7 @@ import java.util.concurrent.Executors;
 
 public class ChatServer {
 
-    public final int PORT = 54545;
+    private final int PORT = 54545;
     private final Map<String, PrintWriter> usernameToWriters = new HashMap<>();
     private final Map<String, OutputStream> clientsOutputStreams = new HashMap<>();
     private Database database;

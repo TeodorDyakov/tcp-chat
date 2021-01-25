@@ -6,9 +6,9 @@ import java.io.IOException;
 import java.io.InputStream;
 
 public class FileReceiveHandler extends Thread {
-    String inputLine;
-    InputStream in;
-    ConsolePrinter consolePrinter;
+    private final String inputLine;
+    private final InputStream in;
+    private final ConsolePrinter consolePrinter;
 
     FileReceiveHandler(String inputLine, InputStream in, ConsolePrinter consolePrinter) {
         this.inputLine = inputLine;

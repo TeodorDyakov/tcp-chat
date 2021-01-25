@@ -10,8 +10,8 @@ import java.util.Scanner;
 
 public class ChatClient {
 
-    public final int PORT = 54545;
-    public final String HOST = "localhost";
+    private final int PORT = 54545;
+    private final String HOST = "localhost";
     private final ConsolePrinter consolePrinter = new ConsolePrinter();
 
     public static void main(String[] args) {

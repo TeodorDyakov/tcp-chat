@@ -7,10 +7,10 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 public class FileSendHandler extends Thread {
-    String inputLine;
-    MessageSender messageSender;
-    OutputStream out;
-    ConsolePrinter consolePrinter;
+    private final String inputLine;
+    private final MessageSender messageSender;
+    private final OutputStream out;
+    private final ConsolePrinter consolePrinter;
 
     public FileSendHandler(String inputLine, MessageSender messageSender, OutputStream out,
                            ConsolePrinter consolePrinter) {
@@ -31,18 +31,20 @@ public class FileSendHandler extends Thread {
         messageSender.sendMessage(inputLine + " " + fileSz);
 
         byte[] bytes = new byte[16 * 1024];
-        try {
-            InputStream in = new FileInputStream(file);
 
-            int count;
-            while ((count = in.read(bytes)) > 0) {
-                out.write(bytes, 0, count);
+        synchronized (out) {
+            try {
+                InputStream in = new FileInputStream(file);
+                int count;
+                while ((count = in.read(bytes)) > 0) {
+                    out.write(bytes, 0, count);
+                }
+                in.close();
+                out.flush();
+            } catch (
+                IOException e) {
+                consolePrinter.printLineToConsole("error when sending file");
             }
-            in.close();
-            out.flush();
-        } catch (
-            IOException e) {
-            consolePrinter.printLineToConsole("error when sending file");
         }
     }
 
