@@ -113,7 +113,7 @@ public class ClientRequestHandler implements Runnable {
         }
     }
 
-    synchronized void transferFile(InputStream in, String inputLine) {
+    void transferFile(InputStream in, String inputLine) {
         if (loggedInUser == null) {
             sendLineToClient(ServerResponse.NOT_LOGGED_IN, clientWriters.get(currentGuestID));
         }
@@ -135,16 +135,18 @@ public class ClientRequestHandler implements Runnable {
             return;
         }
         sendLineToClient(inputLine, printWriter);
-        try {
-            while (bytesRead < fileSz && (count = in.read(bytes)) > 0) {
-                out.write(bytes, 0, count);
-                bytesRead += count;
+        synchronized (out) {
+            try {
+                while (bytesRead < fileSz && (count = in.read(bytes)) > 0) {
+                    out.write(bytes, 0, count);
+                    bytesRead += count;
+                }
+                out.flush();
+                sendLineToClient(ServerResponse.FILE_SENT_SUCCESSFULLY, clientWriters.get(loggedInUser));
+            } catch (IOException e) {
+                sendLineToClient(ServerResponse.FILE_TRANSFER_FAILED, clientWriters.get(loggedInUser));
+                System.out.println(e.getMessage());
             }
-            out.flush();
-            sendLineToClient(ServerResponse.FILE_SENT_SUCCESSFULLY, clientWriters.get(loggedInUser));
-        } catch (IOException e) {
-            sendLineToClient(ServerResponse.FILE_TRANSFER_FAILED, clientWriters.get(loggedInUser));
-            System.out.println(e.getMessage());
         }
     }
 
