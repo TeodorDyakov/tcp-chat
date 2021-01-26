@@ -9,7 +9,9 @@ public class MessageSender {
         this.writer = writer;
     }
 
-    public synchronized void sendMessage(String msg) {
-        writer.println(msg);
+    public void sendMessage(String msg) {
+        synchronized (writer) {
+            writer.println(msg);
+        }
     }
 }
