@@ -10,10 +10,11 @@ import java.net.Socket;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class ClientRequestHandler implements Runnable {
 
-    static private int idNum = 0;
+    static private final AtomicInteger idNum = new AtomicInteger(0);
     private final String currentGuestID;
     private final Socket socket;
     private final Socket fileTransferSocket;
@@ -30,8 +31,7 @@ public class ClientRequestHandler implements Runnable {
         this.clientWriters = clientWriters;
         this.database = database;
         this.clientFileTransferOutputStreams = clientFileTransferOutputStreams;
-        idNum++;
-        this.currentGuestID = "guest" + idNum;
+        this.currentGuestID = "guest" + idNum.incrementAndGet();
     }
 
     String getLoggedInUser() {
@@ -50,14 +50,18 @@ public class ClientRequestHandler implements Runnable {
         return clientWriters.containsKey(user);
     }
 
-    synchronized void loginUser(String username) {
+    void loginUser(String username) {
         loggedInUser = username;
-        var loggedInUserWriter = clientWriters.get(currentGuestID);
-        clientWriters.put(username, loggedInUserWriter);
-        clientWriters.remove(currentGuestID);
-        var fileTransferOut = clientFileTransferOutputStreams.get(currentGuestID);
-        clientFileTransferOutputStreams.put(username, fileTransferOut);
-        clientFileTransferOutputStreams.remove(currentGuestID);
+        synchronized (clientWriters) {
+            var loggedInUserWriter = clientWriters.get(currentGuestID);
+            clientWriters.put(username, loggedInUserWriter);
+            clientWriters.remove(currentGuestID);
+        }
+        synchronized (clientFileTransferOutputStreams) {
+            var fileTransferOut = clientFileTransferOutputStreams.get(currentGuestID);
+            clientFileTransferOutputStreams.put(username, fileTransferOut);
+            clientFileTransferOutputStreams.remove(currentGuestID);
+        }
     }
 
     String getCurrentGuestID() {

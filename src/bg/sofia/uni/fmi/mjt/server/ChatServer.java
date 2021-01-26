@@ -60,14 +60,13 @@ public class ChatServer {
             try {
                 clientSocket = serverSocket.accept();
                 fileTransferSocket = serverSocket.accept();
+                ClientRequestHandler clientHandler =
+                    new ClientRequestHandler(clientSocket, fileTransferSocket, usernameToWriters, database,
+                        clientsOutputStreams);
+                executor.execute(clientHandler);
             } catch (IOException exception) {
                 exception.printStackTrace();
-                continue;
             }
-            ClientRequestHandler clientHandler =
-                new ClientRequestHandler(clientSocket, fileTransferSocket, usernameToWriters, database,
-                    clientsOutputStreams);
-            executor.execute(clientHandler);
         }
     }
 
