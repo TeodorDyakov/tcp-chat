@@ -28,7 +28,8 @@ public class FileSendHandler extends Thread {
         }
         File file = new File(tokens[2]);
         long fileSz = file.length();
-        messageSender.sendMessage(inputLine + " " + fileSz);
+        String message = tokens[0] + " " + tokens[1] + " " + file.getName() + " " + fileSz;
+        messageSender.sendMessage(message);
 
         byte[] bytes = new byte[16 * 1024];
 

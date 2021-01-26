@@ -35,11 +35,12 @@ public class FileReceiveHandler extends Thread {
                 out.write(bytes, 0, count);
                 bytesRead += count;
             }
+            consolePrinter.printLineToConsole("[ file " + fileName + " received ]");
         } catch (IOException e) {
+            consolePrinter.printLineToConsole("File receive unsuccessful.");
             consolePrinter.printLineToConsole(e.getMessage());
             receivedFile.delete();
         }
-        consolePrinter.printLineToConsole("[ file " + fileName + " received ]");
     }
 
     @Override
