@@ -94,7 +94,7 @@ public class ClientRequestHandler implements Runnable {
             String inputLine;
             while ((inputLine = reader.readLine()) != null) { // read the message from the client
                 System.out.println("Request received:" + inputLine);
-                if (inputLine.startsWith("send-file")) {
+                if (inputLine.startsWith("send-file-to")) {
                     final String line = inputLine;
                     new Thread(() -> transferFile(fileTransferIn, line)).start();
                 } else {
