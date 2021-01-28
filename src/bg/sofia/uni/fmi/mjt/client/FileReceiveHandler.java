@@ -17,23 +17,22 @@ public class FileReceiveHandler extends Thread {
     }
 
     void receiveFile() {
-        String[] tokens = inputLine.split("\\s+");
+        final var tokens = inputLine.split("\\s+");
 
-        String fileName = tokens[2];
-        int fileSz = Integer.parseInt(tokens[3]);
+        final var fileName = tokens[2];
+        final var fileSz = Integer.parseInt(tokens[3]);
 
-        byte[] bytes = new byte[8192];
-        int bytesRead = 0;
+        final var bytes = new byte[8192];
+        int bytesLeftToRead = fileSz;
         int count;
 
-        File receivedFile = new File("received_files/" + fileName);
+        final var receivedFile = new File("received_files/" + fileName);
         try {
             receivedFile.createNewFile();
-            FileOutputStream out;
-            out = new FileOutputStream(receivedFile);
-            while (bytesRead < fileSz && (count = in.read(bytes)) > 0) {
+            final var out = new FileOutputStream(receivedFile);
+            while ((count = in.read(bytes, 0, Math.min(bytes.length, bytesLeftToRead))) > 0) {
                 out.write(bytes, 0, count);
-                bytesRead += count;
+                bytesLeftToRead -= count;
             }
             consolePrinter.printLineToConsole("[ file " + fileName + " received ]");
         } catch (IOException e) {

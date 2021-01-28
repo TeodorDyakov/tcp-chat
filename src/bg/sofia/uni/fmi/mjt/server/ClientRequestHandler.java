@@ -121,15 +121,15 @@ public class ClientRequestHandler implements Runnable {
         if (loggedInUser == null) {
             sendLineToClient(ServerResponse.NOT_LOGGED_IN, clientWriters.get(currentGuestID));
         }
-        String[] tokens = inputLine.split("\\s+");
+        final var tokens = inputLine.split("\\s+");
         if (tokens.length < 4) {
             sendLineToClient(ServerResponse.INVALID_COMMAND, clientWriters.get(loggedInUser));
         }
-        String user = tokens[1];
-        int fileSz = Integer.parseInt(tokens[3]);
+        final var user = tokens[1];
+        final var fileSz = Integer.parseInt(tokens[3]);
 
-        byte[] bytes = new byte[8192];
-        int bytesRead = 0;
+        final var bytes = new byte[8192];
+        int bytesLeftToRead = fileSz;
         int count;
 
         var printWriter = clientWriters.get(user);
@@ -141,9 +141,9 @@ public class ClientRequestHandler implements Runnable {
         sendLineToClient(inputLine, printWriter);
         synchronized (out) {
             try {
-                while (bytesRead < fileSz && (count = in.read(bytes)) > 0) {
+                while ((count = in.read(bytes, 0, Math.min(bytes.length, bytesLeftToRead))) > 0) {
                     out.write(bytes, 0, count);
-                    bytesRead += count;
+                    bytesLeftToRead -= count;
                 }
                 out.flush();
                 sendLineToClient(ServerResponse.FILE_SENT_SUCCESSFULLY, clientWriters.get(loggedInUser));

@@ -21,17 +21,17 @@ public class FileSendHandler extends Thread {
     }
 
     public void sendFile() {
-        String[] tokens = inputLine.split("\\s+");
+        final var tokens = inputLine.split("\\s+");
         if (tokens.length < 3) {
             consolePrinter.printLineToConsole("not enough arguments!");
             return;
         }
-        File file = new File(tokens[2]);
-        long fileSz = file.length();
-        String message = tokens[0] + " " + tokens[1] + " " + file.getName() + " " + fileSz;
+        final var file = new File(tokens[2]);
+        final var fileSz = file.length();
+        final var message = tokens[0] + " " + tokens[1] + " " + file.getName() + " " + fileSz;
         messageSender.sendMessage(message);
 
-        byte[] bytes = new byte[16 * 1024];
+        final var bytes = new byte[8192];
 
         synchronized (out) {
             try {
