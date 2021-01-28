@@ -42,7 +42,6 @@ public class FileSendHandler extends Thread {
                 }
                 in.close();
                 out.flush();
-                messageSender.sendMessage("File sent");
             } catch (
                 IOException e) {
                 consolePrinter.printLineToConsole("error when sending file");

@@ -22,7 +22,6 @@ public class ClientRequestHandler implements Runnable {
     private final Database database;
     private final Map<String, OutputStream> clientFileTransferOutputStreams;
     private String loggedInUser;
-    private BufferedReader reader;
 
     ClientRequestHandler(Socket socket, Socket fileTransferSocket, Map<String, PrintWriter> clientWriters,
                          Database database,
@@ -90,7 +89,6 @@ public class ClientRequestHandler implements Runnable {
              var fileTransferIn = fileTransferSocket.getInputStream();
              var reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
              var writer = new PrintWriter(socket.getOutputStream(), true)) {
-            this.reader = reader;
             clientWriters.put(currentGuestID, writer);
             clientFileTransferOutputStreams.put(currentGuestID, fileTransferOut);
             String inputLine;
@@ -148,8 +146,6 @@ public class ClientRequestHandler implements Runnable {
                     bytesRead += count;
                 }
                 out.flush();
-                //read file sent ack
-                reader.readLine();
                 sendLineToClient(ServerResponse.FILE_SENT_SUCCESSFULLY, clientWriters.get(loggedInUser));
             } catch (IOException e) {
                 sendLineToClient(ServerResponse.FILE_TRANSFER_FAILED, clientWriters.get(loggedInUser));
