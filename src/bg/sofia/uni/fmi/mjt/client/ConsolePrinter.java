@@ -2,7 +2,9 @@ package bg.sofia.uni.fmi.mjt.client;
 
 public class ConsolePrinter {
 
-    public synchronized void printLineToConsole(String line) {
-        System.out.println(line);
+    public void printLineToConsole(String line) {
+        synchronized (System.out){
+            System.out.println(line);
+        }
     }
 }
