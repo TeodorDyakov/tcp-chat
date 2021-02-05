@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class CommandCreator {
-    // straight out of https://stackoverflow.com/a/14656159 with small enhancement
     private static List<String> getCommandArguments(String input) {
         List<String> tokens = new ArrayList<>();
         StringBuilder sb = new StringBuilder();
@@ -15,14 +14,13 @@ public class CommandCreator {
             if (c == '"') {
                 insideQuote = !insideQuote;
             }
-            if (c == ' ' && !insideQuote) { //when space is not inside quote split
-                tokens.add(sb.toString().replace("\"", "")); //token is ready, lets add it to list
-                sb.delete(0, sb.length()); //and reset StringBuilder`s content
+            if (c == ' ' && !insideQuote) {
+                tokens.add(sb.toString().replace("\"", ""));
+                sb.delete(0, sb.length());
             } else {
-                sb.append(c);//else add character to token
+                sb.append(c);
             }
         }
-        //lets not forget about last token that doesn't have space after it
         tokens.add(sb.toString().replace("\"", ""));
 
         return tokens;

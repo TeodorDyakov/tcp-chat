@@ -17,15 +17,23 @@ public class CommandExecutor {
     }
 
     public Map<String, String> execute(Command cmd) {
-        var invalid = new HashMap<String, String>();
-        invalid.put(clientRequestHandler.getLoggedInUser(), ServerResponse.INVALID_COMMAND);
         return switch (cmd.command()) {
             case SEND_MESSAGE -> message(cmd.arguments());
             case LOGIN -> login(cmd.arguments());
             case REGISTER -> register(cmd.arguments());
             case SEND_MESSAGE_TO -> messageTo(cmd.arguments());
-            default -> invalid;
+            default -> invalidCommand();
         };
+    }
+
+    Map<String, String>invalidCommand(){
+        var invalid = new HashMap<String, String>();
+        if(clientRequestHandler.getLoggedInUser() == null){
+            invalid.put(clientRequestHandler.getCurrentGuestID(), ServerResponse.INVALID_COMMAND);
+        }else{
+            invalid.put(clientRequestHandler.getLoggedInUser(), ServerResponse.INVALID_COMMAND);
+        }
+        return invalid;
     }
 
     Map<String, String> messageTo(String[] arguments) {
