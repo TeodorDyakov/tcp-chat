@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class CommandExecutor {
+
     static final String SEND_MESSAGE_TO = "send-msg-to";
     static final String REGISTER = "register";
     static final String LOGIN = "login";

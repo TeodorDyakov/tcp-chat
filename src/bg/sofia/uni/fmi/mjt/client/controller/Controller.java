@@ -2,6 +2,7 @@ package bg.sofia.uni.fmi.mjt.client.controller;
 
 import bg.sofia.uni.fmi.mjt.client.presenter.Presenter;
 import bg.sofia.uni.fmi.mjt.client.service.FileTransferService;
+import bg.sofia.uni.fmi.mjt.server.exceptions.ExceptionLogger;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -10,7 +11,6 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.net.Socket;
-import java.util.Arrays;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
 
@@ -19,6 +19,7 @@ public class Controller {
     static final String SEND_FILE_COMMAND = "send-file-to";
     final String HOST;
     final int PORT;
+    ExceptionLogger logger = new ExceptionLogger("client_exceptions.txt");
     Presenter presenter;
     PrintWriter messagesWriter;
     BufferedReader messageReader;
@@ -45,12 +46,13 @@ public class Controller {
                     break;
                 } else {
                     if (inputLine.startsWith(SEND_FILE_COMMAND)) {
-                            handleFileReceive(inputLine);
+                        handleFileReceive(inputLine);
                     } else {
                         toShow.add(inputLine);
                     }
                 }
             } catch (IOException exception) {
+                logger.writeExceptionToFile(exception);
                 toShow.add("[ Disconnected from server! ]");
                 break;
             }
@@ -119,17 +121,18 @@ public class Controller {
             new Thread(this::handleIncomingData).start();
             new Thread(this::handleOutcomingData).start();
         } catch (IOException e) {
+            logger.writeExceptionToFile(e);
             try {
                 messagesSocket.close();
             } catch (IOException exception) {
-                System.err.println(Arrays.toString(exception.getStackTrace()));
+                logger.writeExceptionToFile(exception);
             }
             try {
                 fileTransferSocket.close();
             } catch (IOException exception) {
-                System.err.println(exception.getStackTrace());
+                logger.writeExceptionToFile(exception);
             }
-            System.err.println(e.getStackTrace());
+            logger.writeExceptionToFile(e);
             toShow.add("[ cant connect to server ]");
         }
         startPresenterCommunication();
@@ -141,6 +144,7 @@ public class Controller {
                 presenter.updateView(toShow.take());
             } catch (InterruptedException e) {
                 toShow.add("[ Fatal error! Close the app]");
+                logger.writeExceptionToFile(e);
                 break;
             }
         }

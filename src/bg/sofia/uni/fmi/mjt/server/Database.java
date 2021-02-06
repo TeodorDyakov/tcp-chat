@@ -1,5 +1,7 @@
 package bg.sofia.uni.fmi.mjt.server;
 
+import bg.sofia.uni.fmi.mjt.server.exceptions.ExceptionLogger;
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -13,6 +15,7 @@ public class Database {
     private final Map<String, String> userToPassword = new HashMap<>();
     private final Reader reader;
     private final Writer writer;
+    ExceptionLogger logger = new ExceptionLogger("server_exceptions.txt");
 
     Database(Reader reader, Writer writer) {
         this.reader = reader;
@@ -39,7 +42,7 @@ public class Database {
                 line = bufferedReader.readLine();
             }
         } catch (IOException exception) {
-            exception.printStackTrace();
+            logger.writeExceptionToFile(exception);
         }
     }
 
@@ -50,12 +53,12 @@ public class Database {
             bufferedWriter.write(username + ":" + pass);
             bufferedWriter.write(System.lineSeparator());
         } catch (IOException exception) {
-            exception.printStackTrace();
+            logger.writeExceptionToFile(exception);
         }
         try {
             bufferedWriter.flush();
         } catch (IOException exception) {
-            exception.printStackTrace();
+            logger.writeExceptionToFile(exception);
         }
     }
 }

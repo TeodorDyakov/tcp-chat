@@ -1,6 +1,7 @@
 package bg.sofia.uni.fmi.mjt.server;
 
 import bg.sofia.uni.fmi.mjt.server.exceptions.CouldNotSetUpDatabaseException;
+import bg.sofia.uni.fmi.mjt.server.exceptions.ExceptionLogger;
 import bg.sofia.uni.fmi.mjt.server.exceptions.ServerCreationException;
 
 import java.io.File;
@@ -17,7 +18,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class ChatServer {
-
+    static ExceptionLogger logger = new ExceptionLogger("server_exceptions.txt");
     private final int PORT = 54545;
     private final Map<String, PrintWriter> usernameToWriters = new HashMap<>();
     private final Map<String, OutputStream> clientsOutputStreams = new HashMap<>();
@@ -28,7 +29,7 @@ public class ChatServer {
         try {
             server.start();
         } catch (CouldNotSetUpDatabaseException | ServerCreationException e) {
-            System.out.println(e.getMessage());
+            logger.writeExceptionToFile(e);
         }
     }
 
@@ -65,7 +66,7 @@ public class ChatServer {
                         clientsOutputStreams);
                 executor.execute(clientHandler);
             } catch (IOException exception) {
-                exception.printStackTrace();
+                logger.writeExceptionToFile(exception);
             }
         }
     }

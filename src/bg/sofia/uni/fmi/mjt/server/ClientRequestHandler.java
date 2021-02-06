@@ -1,5 +1,7 @@
 package bg.sofia.uni.fmi.mjt.server;
 
+import bg.sofia.uni.fmi.mjt.server.exceptions.ExceptionLogger;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -21,6 +23,7 @@ public class ClientRequestHandler implements Runnable {
     private final Map<String, PrintWriter> clientWriters;
     private final Database database;
     private final Map<String, OutputStream> clientFileTransferOutputStreams;
+    ExceptionLogger logger = new ExceptionLogger("server_exceptions.txt");
     private String loggedInUser;
 
     ClientRequestHandler(Socket socket, Socket fileTransferSocket, Map<String, PrintWriter> clientWriters,
@@ -102,17 +105,17 @@ public class ClientRequestHandler implements Runnable {
                 }
             }
         } catch (IOException exception) {
-            System.out.println(exception.getMessage());
+            logger.writeExceptionToFile(exception);
         } finally {
             try {
                 socket.close();
             } catch (IOException exception) {
-                exception.printStackTrace();
+                logger.writeExceptionToFile(exception);
             }
             try {
                 fileTransferSocket.close();
             } catch (IOException exception) {
-                exception.printStackTrace();
+                logger.writeExceptionToFile(exception);
             }
         }
     }
@@ -149,7 +152,7 @@ public class ClientRequestHandler implements Runnable {
                 sendLineToClient(ServerResponse.FILE_SENT_SUCCESSFULLY, clientWriters.get(loggedInUser));
             } catch (IOException e) {
                 sendLineToClient(ServerResponse.FILE_TRANSFER_FAILED, clientWriters.get(loggedInUser));
-                System.out.println(e.getMessage());
+                logger.writeExceptionToFile(e);
             }
         }
     }

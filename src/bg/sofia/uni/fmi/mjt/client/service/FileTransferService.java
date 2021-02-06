@@ -1,5 +1,7 @@
 package bg.sofia.uni.fmi.mjt.client.service;
 
+import bg.sofia.uni.fmi.mjt.server.exceptions.ExceptionLogger;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -10,8 +12,9 @@ import java.io.OutputStream;
 public class FileTransferService {
 
     public final static String receivedFilesDir = "received_files";
-    private OutputStream out;
-    private InputStream in;
+    private final OutputStream out;
+    private final InputStream in;
+    ExceptionLogger logger = new ExceptionLogger("client_exceptions.txt");
 
     public FileTransferService(OutputStream out, InputStream in) {
         this.out = out;
@@ -41,6 +44,12 @@ public class FileTransferService {
                 in.close();
                 out.flush();
             } catch (IOException e) {
+                try {
+                    in.close();
+                } catch (IOException exception) {
+                    logger.writeExceptionToFile(exception);
+                }
+                logger.writeExceptionToFile(e);
                 return false;
             }
         }
@@ -53,16 +62,23 @@ public class FileTransferService {
         long count;
 
         final var receivedFile = new File(receivedFilesDir + "/" + fileName);
+        OutputStream out = null;
         try {
             receivedFile.createNewFile();
-            final var out = new FileOutputStream(receivedFile);
+            out = new FileOutputStream(receivedFile);
             while ((count = in.read(bytes, 0, (int) Math.min(bytes.length, bytesLeftToRead))) > 0) {
                 out.write(bytes, 0, (int) count);
                 bytesLeftToRead -= count;
             }
             return true;
         } catch (IOException e) {
+            logger.writeExceptionToFile(e);
             receivedFile.delete();
+            try {
+                out.close();
+            } catch (IOException exception) {
+                logger.writeExceptionToFile(exception);
+            }
             return false;
         }
     }
