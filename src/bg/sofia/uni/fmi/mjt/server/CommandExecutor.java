@@ -26,11 +26,11 @@ public class CommandExecutor {
         };
     }
 
-    Map<String, String>invalidCommand(){
+    Map<String, String> invalidCommand() {
         var invalid = new HashMap<String, String>();
-        if(clientRequestHandler.getLoggedInUser() == null){
+        if (clientRequestHandler.getLoggedInUser() == null) {
             invalid.put(clientRequestHandler.getCurrentGuestID(), ServerResponse.INVALID_COMMAND);
-        }else{
+        } else {
             invalid.put(clientRequestHandler.getLoggedInUser(), ServerResponse.INVALID_COMMAND);
         }
         return invalid;

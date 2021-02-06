@@ -1,4 +1,4 @@
-package bg.sofia.uni.fmi.mjt.client;
+package bg.sofia.uni.fmi.mjt.client.service;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -7,23 +7,23 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-public class FileTransferManager {
+public class FileTransferService {
 
-    OutputStream out;
-    InputStream in;
-    final static String receivedFilesDir = "received_files";
+    public final static String receivedFilesDir = "received_files";
+    private OutputStream out;
+    private InputStream in;
 
-    public FileTransferManager(OutputStream out, InputStream in) {
+    public FileTransferService(OutputStream out, InputStream in) {
         this.out = out;
         this.in = in;
         new File(receivedFilesDir).mkdir();
     }
 
-    public static long getFileSize(String filePath){
+    public static long getFileSize(String filePath) {
         return new File(filePath).length();
     }
 
-    public static String getFileName(String filePath){
+    public static String getFileName(String filePath) {
         return new File(filePath).getName();
     }
 
@@ -47,7 +47,7 @@ public class FileTransferManager {
         return true;
     }
 
-    public boolean receiveFile(String fileName, long fileSz){
+    public boolean receiveFile(String fileName, long fileSz) {
         final var bytes = new byte[8192];
         long bytesLeftToRead = fileSz;
         long count;
@@ -66,4 +66,5 @@ public class FileTransferManager {
             return false;
         }
     }
+
 }

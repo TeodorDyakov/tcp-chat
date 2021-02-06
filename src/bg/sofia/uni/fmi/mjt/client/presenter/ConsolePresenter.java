@@ -1,8 +1,8 @@
-package bg.sofia.uni.fmi.mjt.client;
+package bg.sofia.uni.fmi.mjt.client.presenter;
 
 import java.util.Scanner;
 
-public class ConsolePresenter implements Presenter{
+public class ConsolePresenter implements Presenter {
 
     Scanner scanner = new Scanner(System.in);
 
