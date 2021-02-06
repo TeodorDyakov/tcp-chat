@@ -33,10 +33,9 @@ public class FileTransferService {
     public boolean sendFile(String filePath) {
         final var file = new File(filePath);
         final var bytes = new byte[8192];
-        InputStream in = null;
+
         synchronized (out) {
-            try {
-                in = new FileInputStream(file);
+            try (var in = new FileInputStream(file);) {
                 int count;
                 while ((count = in.read(bytes)) > 0) {
                     out.write(bytes, 0, count);
@@ -44,11 +43,6 @@ public class FileTransferService {
                 in.close();
                 out.flush();
             } catch (IOException e) {
-                try {
-                    in.close();
-                } catch (IOException exception) {
-                    logger.writeExceptionToFile(exception);
-                }
                 logger.writeExceptionToFile(e);
                 return false;
             }
@@ -58,14 +52,12 @@ public class FileTransferService {
 
     public boolean receiveFile(String fileName, long fileSz) {
         final var bytes = new byte[8192];
-        long bytesLeftToRead = fileSz;
-        long count;
-
         final var receivedFile = new File(receivedFilesDir + "/" + fileName);
-        OutputStream out = null;
-        try {
+
+        try (var out = new FileOutputStream(receivedFile);) {
+            long bytesLeftToRead = fileSz;
+            long count;
             receivedFile.createNewFile();
-            out = new FileOutputStream(receivedFile);
             while ((count = in.read(bytes, 0, (int) Math.min(bytes.length, bytesLeftToRead))) > 0) {
                 out.write(bytes, 0, (int) count);
                 bytesLeftToRead -= count;
@@ -74,11 +66,6 @@ public class FileTransferService {
         } catch (IOException e) {
             logger.writeExceptionToFile(e);
             receivedFile.delete();
-            try {
-                out.close();
-            } catch (IOException exception) {
-                logger.writeExceptionToFile(exception);
-            }
             return false;
         }
     }

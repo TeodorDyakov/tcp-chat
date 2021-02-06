@@ -10,7 +10,7 @@ register <username> <password>
 login <username> <password>
 send-msg "<message>"
 send-msg-to <username> "<message>"
-send-file-to <username> "<path to file>"
+send-file-to <username> <path to file>
 ```
 
 Links that are sent in messages are shortened via cutt.ly REST API.
