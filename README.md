@@ -24,6 +24,7 @@ The server spawns a new ClientRequestHadler thread for each new client that conn
 uses up to two threads. One for handling incoming messages and dispatching the messages to the users, and one for file
 transfer.
 
-TODO: add persistance to messages
-TODO: add logout ability. 
-TODO: check whether a connection is alive before sending message to it
+TODO:  
+add persistance to messages
+add logout ability. 
+check whether a connection is alive before sending message to it
